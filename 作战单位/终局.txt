@@ -1,0 +1,121 @@
+#––「求救模块」––#
+[hiddenAction_对地求救]
+temporarilyRemoveTags:安全
+temporarilyAddTags:对地求救
+[hiddenAction_对地解除]
+autoTrigger:true
+requireConditional:if (self.resource.攻击范围)>(self.resource.对地范围) and self.tags(includes="对地求救")
+temporarilyRemoveTags:对地求救
+[hiddenAction_对空求救]
+autoTrigger:true
+requireConditional:if self.tags(includes="安全") and distanceBetween(self.attacking,self)<(self.resource.攻击范围-5) and self.tags(includes="对地") and attacking.tags(includes='对地') and not self.tags(includes="已锁定") and self.isAttacking and self.tags(includes="安全") and self.isControlledByAI
+temporarilyRemoveTags:安全
+temporarilyAddTags:对空求救
+[hiddenAction_对空解除]
+autoTrigger:true
+requireConditional:if (numberOfUnitsInTeam(withTag="拦截",withinRange=320)+numberOfUnitsInTeam(withTag="对空",withinRange=320)+numberOfUnitsInTeam(withTag="防空",withinRange=320))>=(numberOfUnitsInEnemyTeam(withTag="空对地",withinRange=400)*0.3) and self.tags(includes="对空求救")
+temporarilyRemoveTags:对空求救
+
+[hiddenAction_安全]
+autoTrigger:true
+requireConditional:if not self.tags(includes="对地求救") and not self.tags(includes="对空求救") and self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI or not numberOfUnitsInEnemyTeam(withinRange=480,greaterThan=0) and self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI
+clearAllWaypoints:true
+setResourcesWithLogic:逃跑冷却:-4
+temporarilyAddTags:安全
+
+[hiddenAction_作战范围]
+autoTrigger:true
+setResourcesWithLogic:对地范围=select(numberOfUnitsInEnemyTeam(withTag="火炮塔II",withinRange=480)>0,460,select(numberOfUnitsInEnemyTeam(withTag="对地390",withinRange=420)>0,390,select(numberOfUnitsInEnemyTeam(withTag="火炮塔I",withinRange=365)>0,350,select(numberOfUnitsInEnemyTeam(withTag="机枪塔II",withinRange=335)>0,320,select(numberOfUnitsInEnemyTeam(withTag="对地310",withinRange=325)>0,310,select(numberOfUnitsInEnemyTeam(withTag="对地290",withinRange=310)>0,290,select(numberOfUnitsInEnemyTeam(withTag="对地290",withinRange=290)>0,280,select(numberOfUnitsInEnemyTeam(withTag="闪电塔II",withinRange=265)>0,250,select(numberOfUnitsInEnemyTeam(withTag="对地240",withinRange=255)>0,240,select(numberOfUnitsInEnemyTeam(withTag="对地210",withinRange=220)+numberOfUnitsInEnemyTeam(withTag="闪电塔I",withinRange=220)>0,210,select(numberOfUnitsInEnemyTeam(withTag="对地190",withinRange=200)>0,190,select(numberOfUnitsInEnemyTeam(withTag="机枪塔I",withinRange=195)>0,185,select(numberOfUnitsInEnemyTeam(withTag="对地170",withinRange=180)>0,170,select(numberOfUnitsInEnemyTeam(withTag="炮塔T0",withinRange=170)>0,165,select(numberOfUnitsInEnemyTeam(withTag="对地",withinRange=165)>0,160,0)))))))))))))))
+#––「求救模块」––#
+[hiddenAction_陆军对地求救]
+autoTrigger:true
+alsoTriggerAction:对地求救
+alsoTriggerOrQueueActionConditional:if self.tags(includes="安全") and numberOfUnitsInEnemyTeam(withTag="对地",withinRange=480,greaterThan=0)
+requireConditional:if self.resource.攻击范围>=250 and (self.resource.攻击范围)<=(self.resource.对地范围) and numberOfUnitsInTeam(withTag="激光防御塔",withinRange=95,lessThan=1) or numberOfUnitsInTeam(withTag="开始进攻",withinRange=500,lessThan=1) and self.resource.攻击范围<250 and (self.resource.攻击范围)<=(self.resource.对地范围) or not self.tags(includes="对地")
+
+
+#––「逃跑模块」––#
+[hiddenAction_陆军逃跑]
+autoTrigger:true
+alsoTriggerAction:逃跑
+alsoTriggerOrQueueActionConditional:if not self.tags(includes="安全") and not self.tags(includes="已锁定") and self.isControlledByAI and not self.hasActiveWaypoint(type='touchTarget') and self.hasTakenDamage(withinSeconds=3)
+requireConditional:if self.maxhp<=1200 or self.hp<=self.maxhp*0.5 or numberOfUnitsInTeam(withTag="开始进攻",lessThan=1)
+[hiddenAction_陆军逃跑2]
+autoTrigger:true
+alsoTriggerAction:逃跑2
+alsoTriggerOrQueueActionConditional:if not self.tags(includes="安全") and not self.tags(includes="已锁定") and self.isControlledByAI and not self.hasActiveWaypoint(type='touchTarget') and not self.hasTakenDamage(withinSeconds=3)
+requireConditional:if self.maxhp<=1200 or self.hp<=self.maxhp*0.5 or numberOfUnitsInTeam(withTag="开始进攻",lessThan=1)
+[hiddenAction_去修复]
+addWaypoint_target_mapMustBeReachable:false
+addWaypoint_type:move
+addWaypoint_target_nearestUnit_tagged:家
+addWaypoint_target_nearestUnit_team:ally
+#––「作战模块」––#
+[hiddenAction_陆军追不上]
+autoTrigger:true
+alsoTriggerAction:追不上
+alsoTriggerOrQueueActionConditional:if self.maxhp<=1200 or self.hp<=self.maxhp*0.5
+requireConditional:if distanceBetween(self.activeWaypointTarget,self)>(self.resource.攻击范围) and (self.resource.攻击范围)<(activeWaypointTarget.resource.攻击范围) and self.hasActiveWaypoint(type='attack') and activeWaypointTarget.tags(includes='对地') and not self.tags(includes="已定制") and numberOfUnitsInTeam(withTag="开始进攻",withinRange=500,lessThan=1) and self.isControlledByAI
+#––「作战模块」––#
+[hiddenAction_追不上]
+temporarilyRemoveTags:安全
+[hiddenAction_控距]
+autoTrigger:true
+requireConditional:if self.resource.攻击范围>=190 and not self.tags(includes="控距") and distanceBetween(self.attacking,self)<(self.resource.攻击范围-5) and self.tags(includes="对地") and attacking.tags(includes='对地') and not self.tags(includes="已锁定") and self.isAttacking and self.tags(includes="安全") and self.isControlledByAI
+temporarilyAddTags:控距
+clearAllWaypoints:true
+addWaypoint_type:move
+addWaypoint_target_fromReference:createMarker(x=attacking.x,y=attacking.y,dir=directionBetween(self,self.attacking)).getOffsetRelative(y=-400)
+[hiddenAction_控距停止]
+autoTrigger:true
+requireConditional:if distanceBetween(self.attacking,self)>=(self.resource.攻击范围) and self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全") or not self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全")
+temporarilyRemoveTags:控距
+clearAllWaypoints:true
+
+#––「逃跑模块」––#
+[resource_逃跑冷却]
+displayName:逃跑
+[hiddenAction_减少冷却]
+autoTrigger:true
+requireConditional:if not self.tags(includes="安全") and self.resource.逃跑冷却<0 and self.customTimer(laterThanSeconds=1) and self.isControlledByAI
+addResources:逃跑冷却:1
+[hiddenAction_逃跑]
+clearAllWaypoints:true
+addWaypoint_type:move
+addWaypoint_target_fromReference:createMarker(x=lastDamagedBy.x,y=lastDamagedBy.y,dir=directionBetween(self,self.lastDamagedBy)).getOffsetRelative(y=-400)
+[hiddenAction_逃跑2]
+clearAllWaypoints:true
+addWaypoint_type:touchTarget
+addWaypoint_target_nearestUnit_tagged:修复
+addWaypoint_target_mapMustBeReachable:true
+addWaypoint_target_nearestUnit_team:ally
+addWaypoint_triggerActionIfFailed:去修复
+
+#––「攻击模块」––#
+[hiddenAction_陆军攻击]
+autoTrigger:true
+alsoTriggerAction:攻击优先级
+alsoTriggerOrQueueActionConditional:if self.tags(includes="安全") and not self.tags(includes="控距") and not self.tags(includes="已定制") and self.tags(includes="对地") and self.isAttacking and self.isControlledByAI and self.customTimer(laterThanSeconds=1) and numberOfUnitsInTeam(withTag="聚集",withinRange=500,greaterThan=0)
+requireConditional:if numberOfUnitsInEnemyTeam(withTag="建造",withinRange=310,greaterThan=0) or numberOfUnitsInEnemyTeam(withTag="激光防御塔",withinRange=310,greaterThan=0) or numberOfUnitsInEnemyTeam(withTag="对地",withinRange=310,greaterThan=0)
+[hiddenAction_攻击优先级]
+resetCustomTimer:true
+addWaypoint_target_mapMustBeReachable:true
+clearAllWaypoints:true
+addWaypoint_type:attack
+addWaypoint_target_nearestUnit_tagged:建造
+addWaypoint_target_nearestUnit_maxRange:310
+addWaypoint_target_nearestUnit_team:enemy
+addWaypoint_triggerActionIfFailed:攻击激光
+[hiddenAction_攻击激光]
+addWaypoint_target_mapMustBeReachable:true
+addWaypoint_type:attack
+addWaypoint_target_nearestUnit_tagged:激光防御塔
+addWaypoint_target_nearestUnit_maxRange:310
+addWaypoint_target_nearestUnit_team:enemy
+addWaypoint_triggerActionIfFailed:攻击对地
+[hiddenAction_攻击对地]
+addWaypoint_target_mapMustBeReachable:true
+addWaypoint_type:attack
+addWaypoint_target_nearestUnit_tagged:对地
+addWaypoint_target_nearestUnit_maxRange:310
+addWaypoint_target_nearestUnit_team:enemy

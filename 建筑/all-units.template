@@ -1,0 +1,57 @@
+[core]
+autoTriggerCheckRate:every8Frames
+tags:建筑物
+#建筑
+[global_resource_AI阶段]
+displayName:阶段
+displayColor:#FF5D46
+displayRoundedDown:false
+[global_resource_AI难度]
+displayName:ai难度
+displayColor:#DA2D00
+hidden:true
+[global_resource_信用]
+displayName:信用
+hidden:true
+displayColor:#EFEF82
+displayRoundedDown:false
+[global_resource_时间]
+displayName:游戏时间
+displayColor:#FFFFFF
+[global_resource_概率]
+displayName:概率
+hidden:true
+[global_resource_队伍]
+hidden:true
+#特殊资源
+[resource_前线计时]
+hidden:true
+[resource_ai核弹]
+displayName:核弹数量
+#密集系统
+[hiddenAction_密集]
+autoTrigger:true
+requireConditional:if numberOfUnitsInTeam(greaterThan=12,withinRange=400) and not self.tags(includes="密集")
+temporarilyAddTags:密集
+[hiddenAction_密集无反]
+autoTrigger:true
+requireConditional:if self.tags(includes="密集") and numberOfUnitsInTeam(withTag="反核",withinRange=400,greaterThan=0) and not self.tags(includes="密集无反")
+temporarilyAddTags:密集无反
+[hiddenAction_密集有反]
+autoTrigger:true
+requireConditional:if numberOfUnitsInTeam(greaterThan=12,withinRange=400) and numberOfUnitsInTeam(withTag="反核",withinRange=400,lessThan=1) and self.tags(includes="密集无反")
+temporarilyRemoveTags:密集无反
+[hiddenAction_不密集]
+autoTrigger:true
+requireConditional:if numberOfUnitsInTeam(lessThan=13,withinRange=400) and self.tags(includes="密集")
+temporarilyRemoveTags:密集,密集无反
+#防空标签
+[hiddenAction_无防空保护]
+autoTrigger:true
+requireConditional:if (numberOfUnitsInTeam(withTag="对空",withinRange=240)+numberOfUnitsInTeam(withTag="家",withinRange=280)+numberOfUnitsInTeam(withTag="防空",withinRange=250)+numberOfUnitsInTeam(withTag="中防空",withinRange=340)+numberOfUnitsInTeam(withTag="大防空",withinRange=400))<=0 and not self.tags(includes="防空") 
+temporarilyAddTags:无防空保护,需要防空
+[hiddenAction_有防空保护]
+autoTrigger:true
+requireConditional:if (numberOfUnitsInTeam(withTag="对空",withinRange=240)+numberOfUnitsInTeam(withTag="家",withinRange=280)+numberOfUnitsInTeam(withTag="防空",withinRange=250)+numberOfUnitsInTeam(withTag="中防空",withinRange=340)+numberOfUnitsInTeam(withTag="大防空",withinRange=400))>0
+temporarilyRemoveTags:无防空保护,需要防空
+[decal_1]

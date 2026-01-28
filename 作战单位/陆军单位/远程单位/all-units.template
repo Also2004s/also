@@ -1,0 +1,54 @@
+[core]
+copyFrom:"""
+ROOT:/作战单位/战力模块.ini,
+ROOT:/作战单位/地面模块.ini,
+ROOT:/作战单位/陆军模块.ini
+"""
+#––「设定」––#
+[hiddenAction_攻击范围]
+alsoTriggerAction:陆军
+[hiddenAction_陆军]
+requireConditional:if not self.tags(includes="海") and not self.tags(includes="水")
+temporarilyAddTags:陆军
+[hiddenAction_作战中控]
+autoTrigger:true
+requireConditional:if numberOfUnitsInTeam(withTag="作战区块",withinRange=690)==0
+spawnUnits:作战区块
+
+
+[hiddenAction_安全]
+autoTrigger:true
+requireConditional:if self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI or not numberOfUnitsInEnemyTeam(withinRange=480,greaterThan=0) and self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI
+clearAllWaypoints:true
+setResourcesWithLogic:逃跑冷却:-4
+temporarilyAddTags:安全
+
+#––「作战模块」––#
+[hiddenAction_陆军追不上]
+autoTrigger:true
+alsoTriggerAction:追不上
+alsoTriggerOrQueueActionConditional:if self.maxhp<=1200 or self.hp<=self.maxhp*0.5
+requireConditional:if distanceBetween(self.activeWaypointTarget,self)>(self.resource.攻击范围) and (self.resource.攻击范围)<(activeWaypointTarget.resource.攻击范围) and self.hasActiveWaypoint(type='attack') and activeWaypointTarget.tags(includes='对地') and not self.tags(includes="已定制") and numberOfUnitsInTeam(withTag="开始进攻",withinRange=500,lessThan=1) and self.isControlledByAI
+#––「作战模块」––#
+[hiddenAction_追不上]
+temporarilyRemoveTags:安全
+[hiddenAction_控距]
+autoTrigger:true
+requireConditional:if self.resource.攻击范围>=190 and not self.tags(includes="控距") and distanceBetween(self.attacking,self)<(self.resource.攻击范围-5) and self.tags(includes="对地") and attacking.tags(includes='对地') and not self.tags(includes="已锁定") and self.isAttacking and self.tags(includes="安全") and self.isControlledByAI
+temporarilyAddTags:控距
+clearAllWaypoints:true
+addWaypoint_type:move
+addWaypoint_target_fromReference:createMarker(x=attacking.x,y=attacking.y,dir=directionBetween(self,self.attacking)).getOffsetRelative(y=-400)
+[hiddenAction_控距停止]
+autoTrigger:true
+requireConditional:if distanceBetween(self.attacking,self)>=(self.resource.攻击范围) and self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全") or not self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全")
+temporarilyRemoveTags:控距
+clearAllWaypoints:true
+
+#––「逃跑模块」––#
+[resource_逃跑冷却]
+displayName:逃跑
+[hiddenAction_减少冷却]
+autoTrigger:true
+requireConditional:if not self.tags(includes="安全") and self.resource.逃跑冷却<0 and self.customTimer(laterThanSeconds=1) and self.isControlledByAI
+addResources:逃跑冷却:1

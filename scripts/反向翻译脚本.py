@@ -246,7 +246,7 @@ class ReverseTranslator:
             return self.lib.get_value_translation(value)
         
         # 处理已翻译的移动类型
-        if value in ['地面', '水面', '悬浮', '空中', '悬崖']:
+        if value in ['陆地', '水面', '跨悬崖和水面', '空中', '跨悬崖', '两栖']:
             return self.lib.get_value_translation(value)
         
         # 处理特殊值

@@ -114,6 +114,24 @@ class INITranslator:
         }
         # 定义要处理的文件扩展名
         self.valid_extensions: Set[str] = {'.ini', '.template'}
+        
+        # 预编译正则表达式以提高性能
+        self._compile_translation_patterns()
+    
+    def _compile_translation_patterns(self):
+        """预编译翻译用的正则表达式模式"""
+        # 缓存排序后的键列表（按长度降序，避免短词替换长词的一部分）
+        self.sorted_keys = sorted(
+            [k for k in self.lib.translations.keys() if k not in self.lib.translations.values()],
+            key=len, 
+            reverse=True
+        )
+        
+        # 预编译正则表达式模式
+        self.compiled_patterns = {}
+        for eng_key in self.sorted_keys:
+            pattern = r'\b' + re.escape(eng_key) + r'\b'
+            self.compiled_patterns[eng_key] = re.compile(pattern)
     
     def is_valid_file(self, file_path: Path) -> bool:
         """检查文件是否是有效的可翻译文件"""
@@ -139,7 +157,9 @@ class INITranslator:
                 has_translation = True
         
         # 确保输出目录存在
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        output_dir = os.path.dirname(output_path)
+        if output_dir:  # 只有在有目录路径时才创建
+            os.makedirs(output_dir, exist_ok=True)
         
         try:
             with open(output_path, 'w', encoding='utf-8') as f:
@@ -157,13 +177,16 @@ class INITranslator:
         """翻译单行内容"""
         original = line
         
+        # 移除行尾的换行符（保留空格缩进）
+        line_content = line.rstrip('\n\r')
+        
         # 跳过空行和纯注释行
-        stripped = line.strip()
+        stripped = line_content.strip()
         if not stripped or stripped.startswith('#'):
-            return line
+            return line_content + '\n' if line.endswith('\n') else line_content
         
         # 处理Section行 [section_name]
-        section_match = re.match(r'^(\s*)\[([^\]]+)\](\s*)$', line)
+        section_match = re.match(r'^(\s*)\[([^\]]+)\](\s*)$', line_content)
         if section_match:
             indent = section_match.group(1)
             section_name = section_match.group(2)
@@ -184,8 +207,7 @@ class INITranslator:
             return f"{indent}[{translated_section}]{trailing}{comment}\n"
         
         # 处理键值对 key: value 或 key = value
-        # 先尝试匹配 key: value 格式
-        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line.rstrip())
+        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line_content)
         if kv_match:
             indent = kv_match.group(1)
             key = kv_match.group(2).strip()
@@ -212,10 +234,13 @@ class INITranslator:
             
             return f"{indent}{translated_key}{separator}{translated_value}{comment}\n"
         
-        return line
+        # 对于不匹配任何模式的行，确保有换行符
+        return line_content + '\n' if line.endswith('\n') else line_content
     
     def translate_value(self, value: str) -> str:
         """翻译value值"""
+        original_value = value
+        
         # 处理布尔值
         if value.lower() in ['true', 'false']:
             return self.lib.get_value_translation(value.lower())
@@ -228,7 +253,19 @@ class INITranslator:
         if value in ['AUTO', 'NONE']:
             return self.lib.get_value_translation(value)
         
-        return value
+        # 翻译value中出现的英文标识符（变量名、函数名等）
+        # 使用预编译的正则表达式模式以提高性能
+        translated_value = value
+        for eng_key in self.sorted_keys:
+            chn_key = self.lib.translations[eng_key]
+            
+            # 使用预编译的正则表达式
+            pattern = self.compiled_patterns[eng_key]
+            if pattern.search(translated_value):
+                translated_value = pattern.sub(chn_key, translated_value)
+                self.stats['lines_translated'] += 1
+        
+        return translated_value
     
     def translate_directory(self, input_dir: str, output_dir: str, 
                            exclude_dirs: List[str] = None, exclude_files: List[str] = None):
@@ -344,7 +381,8 @@ def main():
     if len(sys.argv) >= 3:
         output_dir = sys.argv[2]
     else:
-        output_dir = "翻译结果"
+        # 默认输出到输入目录，覆盖原文件
+        output_dir = input_dir
     
     print("=" * 60)
     print("批量翻译脚本 - INI/Template文件自动翻译工具")
@@ -380,13 +418,11 @@ def main():
     translator = INITranslator(library)
     translator.translate_directory(input_dir, output_dir)
     
-    # 生成文件列表
-    list_path = os.path.join(output_dir, "_文件列表.txt")
-    scan_and_list_files(input_dir, list_path)
-    
     print("\n" + "=" * 60)
-    print("翻译结果已保存到:", os.path.abspath(output_dir))
-    print("文件列表已保存到:", os.path.abspath(list_path))
+    if input_dir == output_dir:
+        print("翻译完成！所有文件已直接覆盖更新")
+    else:
+        print("翻译完成！翻译结果已保存到:", os.path.abspath(output_dir))
 
 
 if __name__ == "__main__":

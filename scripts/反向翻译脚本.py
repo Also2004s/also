@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-反向翻译脚本 - 将翻译后的中文INI/Template文件转换回英文
+反向翻译脚本 - 将中文INI/Template文件转换回英文
 功能：
 1. 读取翻译库，构建反向映射（中文->英文）
 2. 递归遍历指定目录下的所有.ini和.template文件
@@ -15,8 +15,8 @@
     默认输出目录: 反向翻译结果/
     
     示例:
-    python 反向翻译脚本.py 翻译结果/哈哈 . 
-    python 反向翻译脚本.py 翻译/作战单位 英文输出/
+    python 反向翻译脚本.py . 英文结果/
+    python 反向翻译脚本.py 翻译结果/中文 英文输出/
 """
 
 import os
@@ -116,6 +116,24 @@ class ReverseTranslator:
         }
         # 定义要处理的文件扩展名
         self.valid_extensions: Set[str] = {'.ini', '.template'}
+        
+        # 预编译正则表达式以提高性能
+        self._compile_translation_patterns()
+    
+    def _compile_translation_patterns(self):
+        """预编译翻译用的正则表达式模式"""
+        # 缓存排序后的键列表（按长度降序，避免短词替换长词的一部分）
+        self.sorted_keys = sorted(
+            [k for k in self.lib.translations.keys() if k not in self.lib.translations.values()],
+            key=len, 
+            reverse=True
+        )
+        
+        # 预编译正则表达式模式
+        self.compiled_patterns = {}
+        for chn_key in self.sorted_keys:
+            pattern = r'\b' + re.escape(chn_key) + r'\b'
+            self.compiled_patterns[chn_key] = re.compile(pattern)
     
     def is_valid_file(self, file_path: Path) -> bool:
         """检查文件是否是有效的可翻译文件"""
@@ -127,7 +145,7 @@ class ReverseTranslator:
             with open(input_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
         except Exception as e:
-            print(f"  ✗ 读取失败: {input_path} - {e}")
+            print(f"  [FAIL] 读取失败: {input_path} - {e}")
             self.stats['files_skipped'] += 1
             return False
         
@@ -141,31 +159,36 @@ class ReverseTranslator:
                 has_translation = True
         
         # 确保输出目录存在
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        output_dir = os.path.dirname(output_path)
+        if output_dir:  # 只有在有目录路径时才创建
+            os.makedirs(output_dir, exist_ok=True)
         
         try:
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.writelines(translated_lines)
         except Exception as e:
-            print(f"  ✗ 写入失败: {output_path} - {e}")
+            print(f"  [FAIL] 写入失败: {output_path} - {e}")
             self.stats['files_skipped'] += 1
             return False
         
         self.stats['files_processed'] += 1
-        print(f"  ✓ 已反向翻译: {input_path} -> {output_path}")
+        print(f"  [OK] 已反向翻译: {input_path} -> {output_path}")
         return True
     
     def translate_line(self, line: str) -> str:
         """反向翻译单行内容（中文->英文）"""
         original = line
         
+        # 移除行尾的换行符（保留空格缩进）
+        line_content = line.rstrip('\n\r')
+        
         # 跳过空行和纯注释行
-        stripped = line.strip()
+        stripped = line_content.strip()
         if not stripped or stripped.startswith('#'):
-            return line
+            return line_content + '\n' if line.endswith('\n') else line_content
         
         # 处理Section行 [section_name]
-        section_match = re.match(r'^(\s*)\[([^\]]+)\](\s*)$', line)
+        section_match = re.match(r'^(\s*)\[([^\]]+)\](\s*)$', line_content)
         if section_match:
             indent = section_match.group(1)
             section_name = section_match.group(2)
@@ -186,7 +209,7 @@ class ReverseTranslator:
             return f"{indent}[{translated_section}]{trailing}{comment}\n"
         
         # 处理键值对 key: value 或 key = value
-        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line.rstrip())
+        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line_content)
         if kv_match:
             indent = kv_match.group(1)
             key = kv_match.group(2).strip()
@@ -213,7 +236,8 @@ class ReverseTranslator:
             
             return f"{indent}{translated_key}{separator}{translated_value}{comment}\n"
         
-        return line
+        # 对于不匹配任何模式的行，确保有换行符
+        return line_content + '\n' if line.endswith('\n') else line_content
     
     def translate_value(self, value: str) -> str:
         """反向翻译value值（中文->英文）"""
@@ -229,7 +253,19 @@ class ReverseTranslator:
         if value in ['自动', '无']:
             return self.lib.get_value_translation(value)
         
-        return value
+        # 反向翻译value中出现的中文标识符（变量名、函数名等）
+        # 使用预编译的正则表达式模式以提高性能
+        translated_value = value
+        for chn_key in self.sorted_keys:
+            eng_key = self.lib.translations[chn_key]
+            
+            # 使用预编译的正则表达式
+            pattern = self.compiled_patterns[chn_key]
+            if pattern.search(translated_value):
+                translated_value = pattern.sub(eng_key, translated_value)
+                self.stats['lines_translated'] += 1
+        
+        return translated_value
     
     def translate_directory(self, input_dir: str, output_dir: str, 
                            exclude_dirs: List[str] = None, exclude_files: List[str] = None):
@@ -302,7 +338,8 @@ def main():
     if len(sys.argv) >= 3:
         output_dir = sys.argv[2]
     else:
-        output_dir = "反向翻译结果"
+        # 默认输出到输入目录，覆盖原文件
+        output_dir = input_dir
     
     print("=" * 60)
     print("反向翻译脚本 - 中文INI/Template文件转英文工具")
@@ -339,7 +376,10 @@ def main():
     translator.translate_directory(input_dir, output_dir)
     
     print("\n" + "=" * 60)
-    print("反向翻译结果已保存到:", os.path.abspath(output_dir))
+    if input_dir == output_dir:
+        print("反向翻译完成！所有文件已直接覆盖更新")
+    else:
+        print("反向翻译完成！结果已保存到:", os.path.abspath(output_dir))
 
 
 if __name__ == "__main__":

@@ -11,7 +11,18 @@
 [core] = [核心]
 [graphics] = [图像]
 [movement] = [移动]
-hiddenAction = 隐藏行动
+[hiddenAction] = [隐藏行动]
+[action] = [行动]
+[animation] = [动画]
+[attachment] = [附属]
+[decal] = [贴花]
+[effect] = [效果]
+[projectile] = [抛射体]
+[resource] = [资源]
+[turret] = [炮塔]
+[ai] = [AI]
+[canBuild] = [可建造]
+[global_resource] = [全局资源]
 
 # ================================================================================
 # Value 特殊值翻译 (布尔值、枚举值等)
@@ -521,7 +532,6 @@ nearestUnit = 接近单位
 neutral = 中立
 noneGlobalExtraPriority = 全图没有时优先级
 noneInBaseExtraPriority = 基地内没有时优先级
-not = 否
 notPassivelyTargetedByOtherUnits = 不被动地被其他单位瞄准
 nukeOnDeath = 死亡核爆
 nukeOnDeathDamage = 死亡核爆伤害

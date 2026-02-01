@@ -57,9 +57,22 @@ class TranslationStats:
 
 
 class ReverseTranslationLibrary:
-    """反向翻译库类，构建中文->英文的映射"""
+    """
+    反向翻译库类，构建中文->英文的映射
 
-    # 原始英文特殊值
+    功能:
+        与TranslationLibrary相反，构建中文到英文的反向映射
+        用于将已翻译的中文INI文件转换回英文
+
+    与正向翻译的区别:
+        - 正向: 读取 [english] = [中文]，建立 eng->chn 映射
+        - 反向: 读取 [english] = [中文]，建立 chn->eng 映射（反向）
+
+    使用场景:
+        将已经翻译成中文的INI文件还原为英文，方便版本对比或更新
+    """
+
+    # 原始英文特殊值（用于识别哪些value需要特殊处理）
     SPECIAL_VALUES: ClassVar[set[str]] = {
         'true', 'false', 'TRUE', 'FALSE', 'True', 'False',
         'LAND', 'WATER', 'HOVER', 'AIR', 'OVER_CLIFF', 'OVER_CLIFF_WATER',
@@ -184,14 +197,27 @@ class ReverseTranslationLibrary:
 
 
 class ReverseTranslator:
-    """反向翻译器：中文 -> 英文"""
+    """
+    反向翻译器：中文 -> 英文
+
+    功能:
+        将中文INI文件翻译回英文
+        逻辑与INITranslator类似，但使用反向映射（中文->英文）
+
+    与正向翻译器的区别:
+        - 使用 ReverseTranslationLibrary（中文->英文映射）
+        - 不需要处理 global_resource_XX 特殊规则（因为已经翻译成中文了）
+        - 其他处理逻辑完全相同
+
+    使用场景:
+        当需要将已翻译的中文版本还原为英文时（如对比原版、更新版本等）
+    """
 
     VALID_EXTENSIONS: ClassVar[set[str]] = {'.ini', '.template'}
     DEFAULT_EXCLUDES: ClassVar[set[str]] = {'.git', '.vscode', '__pycache__', 'scripts'}
 
-    # 预编译的正则表达式
+    # 预编译的正则表达式（与正向翻译器相同）
     SECTION_PATTERN: ClassVar[re.Pattern] = re.compile(r'^(\s*)\[([^\]]+)\](\s*)$')
-    # 支持有value或只有key的情况（如 "key: value" 或 "key:"）
     KV_PATTERN: ClassVar[re.Pattern] = re.compile(r'^(\s*)([^:=#\[]+?)([:=])(.*?)(\s*)$')
 
     def __init__(self, library: ReverseTranslationLibrary) -> None:
@@ -248,7 +274,30 @@ class ReverseTranslator:
         return line
 
     def _translate_section_line(self, match: re.Match, stats: TranslationStats) -> str:
-        """翻译Section行"""
+        """
+        反向翻译Section行（中文 -> 英文）
+
+        处理流程（按优先级）:
+            1. 处理带#注释的section（分离注释部分）
+            2. 尝试完整section名称匹配（在反向映射中查找）
+            3. 处理带下划线的section（分割前缀和后缀，只翻译前缀）
+            4. 以上都不匹配则原样返回
+
+        Args:
+            match: 正则匹配结果，groups: (缩进, section名称, 尾部空白)
+            stats: 统计对象，用于记录翻译数量
+
+        Returns:
+            反向翻译后的section行字符串
+
+        示例:
+            [全局_资源] -> [global_resource]          （完整匹配）
+            [隐藏动作_陆军协防] -> [hiddenAction_陆军协防]  （前缀翻译）
+
+        注意:
+            与正向翻译不同，反向翻译不需要处理 global_resource_XX 特殊规则
+            因为这些section已经被翻译成中文格式了
+        """
         indent, section_name, trailing = match.groups()
 
         # 处理带注释的section
@@ -258,11 +307,59 @@ class ReverseTranslator:
             section_name = section_name.strip()
             comment = '#' + comment_part
 
+        original_section = section_name
+
+        # 1. 首先尝试完整section匹配（如 [全局_资源] -> [global_resource]）
+        # 在反向映射中查找：中文 -> 英文
         translated_section = self.lib.get_section_translation(section_name)
         if translated_section != section_name:
             stats.sections_translated += 1
+            return f"{indent}[{translated_section}]{trailing}{comment}"
 
-        return f"{indent}[{translated_section}]{trailing}{comment}"
+        # 2. 处理带下划线的section名称（如 [隐藏动作_陆军协防]）
+        # 分割前缀和后缀，只翻译前缀部分（中文前缀 -> 英文前缀）
+        if '_' in section_name:
+            translated = self._translate_prefixed_section(section_name, stats)
+            if translated != section_name:
+                return f"{indent}[{translated}]{trailing}{comment}"
+
+        return f"{indent}[{section_name}]{trailing}{comment}"
+
+    def _translate_prefixed_section(self, section_name: str, stats: TranslationStats) -> str:
+        """
+        反向翻译带前缀的section名称（如 隐藏动作_陆军协防 -> hiddenAction_陆军协防）
+
+        功能:
+            将section名称按下划线分割为前缀和后缀，只翻译前缀部分
+            前缀从中文翻译回英文，后缀保持原样
+
+        Args:
+            section_name: section名称（不含方括号），如 "隐藏动作_陆军协防"
+            stats: 统计对象（暂未使用，保持接口一致性）
+
+        Returns:
+            反向翻译后的section名称，如 "hiddenAction_陆军协防"
+            如果前缀没有对应的英文翻译，则返回原名称
+
+        注意:
+            - 与正向翻译逻辑相同，只是映射方向相反（中文->英文）
+            - 需要在翻译库中有反向映射（如 [hiddenAction] = [隐藏动作] 会被反向解析）
+        """
+        # 分割前缀和后缀（只分割一次，保留后续所有内容）
+        parts = section_name.split('_', 1)
+        if len(parts) != 2:
+            return section_name
+
+        prefix, suffix = parts
+
+        # 在反向映射中查找前缀的翻译（中文前缀 -> 英文前缀）
+        translated_prefix = self.lib.get_section_translation(prefix)
+        if translated_prefix == prefix:
+            # 前缀没有对应的翻译，返回原值不变
+            return section_name
+
+        # 找到了前缀翻译，组合成新名称（后缀保持原样）
+        return f"{translated_prefix}_{suffix}"
 
     def _translate_kv_line(self, match: re.Match, stats: TranslationStats) -> str:
         """翻译键值对行"""

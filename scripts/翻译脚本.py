@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 批量翻译脚本 - 遍历项目下所有INI和Template文件并调用翻译库进行翻译
-
+仅执行英文翻译中文
 功能：
     1. 递归遍历指定目录下的所有.ini和.template文件
     2. 读取翻译库中的key-value对照表
@@ -32,7 +32,17 @@ from typing import ClassVar
 
 @dataclass
 class TranslationStats:
-    """翻译统计信息"""
+    """
+    翻译统计信息类
+    用于记录和汇总翻译过程中的各类统计数据
+
+    属性:
+        files_processed: 成功处理的文件数量
+        files_skipped: 跳过/失败的文件数量
+        lines_translated: 被翻译的文本行数（value值中的翻译）
+        keys_translated: 被翻译的键名数量
+        sections_translated: 被翻译的section名称数量
+    """
     files_processed: int = 0
     files_skipped: int = 0
     lines_translated: int = 0
@@ -40,7 +50,7 @@ class TranslationStats:
     sections_translated: int = 0
 
     def merge(self, other: TranslationStats) -> None:
-        """合并另一个统计对象"""
+        """合并另一个统计对象的数值到当前对象（用于汇总多个文件的统计）"""
         self.files_processed += other.files_processed
         self.files_skipped += other.files_skipped
         self.lines_translated += other.lines_translated
@@ -48,6 +58,7 @@ class TranslationStats:
         self.sections_translated += other.sections_translated
 
     def __str__(self) -> str:
+        """返回格式化的统计报告"""
         return (
             f"  处理文件数: {self.files_processed}\n"
             f"  跳过文件数: {self.files_skipped}\n"
@@ -57,33 +68,55 @@ class TranslationStats:
 
 
 class TranslationLibrary:
-    """翻译库类，用于加载和管理翻译对照表"""
+    """
+    翻译库类，用于加载和管理翻译对照表
 
-    # 特殊值列表（需要特殊处理的英文值）
+    功能:
+        1. 从文件加载翻译对照表（scripts/翻译库.txt）
+        2. 管理三种类型的翻译映射:
+           - section_translations: section名称翻译（[section]格式）
+           - translations: 普通key翻译
+           - value_translations: 特殊值翻译（如true/false等）
+        3. 预编译正则表达式以提高匹配性能
+
+    翻译库文件格式:
+        [english_section] = [中文_section]  # section翻译
+        key = 键名                        # 普通key翻译
+        true = 真                         # 特殊value翻译
+    """
+
+    # 特殊值列表（需要特殊处理的英文值，不区分大小写）
+    # 这些值在INI文件中有特殊含义，需要单独处理
     SPECIAL_VALUES: ClassVar[set[str]] = {
         'true', 'false', 'TRUE', 'FALSE', 'True', 'False',
         'LAND', 'WATER', 'HOVER', 'AIR', 'OVER_CLIFF', 'OVER_CLIFF_WATER',
         'AUTO', 'NONE'
     }
 
-    # 翻译库可能的路径
+    # 翻译库文件可能的路径（按优先级排序）
     LIB_PATHS: ClassVar[list[str]] = [
-        "scripts/翻译库.txt",
-        "翻译库.txt",
-        "../scripts/翻译库.txt",
-        "../../scripts/翻译库.txt"
+        "scripts/翻译库.txt",      # 首选路径
+        "翻译库.txt",              # 当前目录
+        "../scripts/翻译库.txt",   # 上级目录
+        "../../scripts/翻译库.txt" # 上上级目录
     ]
 
     def __init__(self, lib_path: str | None = None) -> None:
-        self.lib_path = lib_path
-        self.translations: dict[str, str] = {}
-        self.section_translations: dict[str, str] = {}
-        self.value_translations: dict[str, str] = {}
-        self._sorted_keys: list[str] = []
-        self._compiled_patterns: dict[str, re.Pattern] = {}
+        """
+        初始化翻译库
 
-        self._load_library()
-        self._compile_patterns()
+        Args:
+            lib_path: 可选的自定义翻译库文件路径，为None时自动搜索
+        """
+        self.lib_path = lib_path
+        self.translations: dict[str, str] = {}           # 普通key翻译映射
+        self.section_translations: dict[str, str] = {}   # section名称翻译映射
+        self.value_translations: dict[str, str] = {}     # 特殊value翻译映射
+        self._sorted_keys: list[str] = []                # 排序后的key列表（用于匹配优先级）
+        self._compiled_patterns: dict[str, re.Pattern] = {}  # 预编译的正则表达式
+
+        self._load_library()       # 加载翻译库文件
+        self._compile_patterns()   # 预编译正则表达式
 
     def _find_library_path(self) -> str | None:
         """查找翻译库文件路径"""
@@ -96,7 +129,14 @@ class TranslationLibrary:
         return None
 
     def _load_library(self) -> None:
-        """加载翻译库文件"""
+        """
+        加载并解析翻译库文件
+
+        解析规则:
+            1. 空行和以#开头的行被忽略
+            2. [english] = [中文] 格式 -> section_translations
+            3. key = value 格式 -> 根据key是否为SPECIAL_VALUES决定存入value_translations还是translations
+        """
         found_path = self._find_library_path()
 
         if not found_path:
@@ -112,7 +152,7 @@ class TranslationLibrary:
             print(f"警告: 读取翻译库失败: {e}")
             return
 
-        # Section 翻译的正则
+        # Section翻译的正则: 匹配 [english] = [中文] 格式
         section_pattern = re.compile(r'^\[(.+?)\]\s*=\s*\[(.+?)\]$')
 
         for line in content.split('\n'):
@@ -130,6 +170,7 @@ class TranslationLibrary:
             if '=' in line:
                 eng, chn = (part.strip() for part in line.split('=', 1))
 
+                # 特殊值（如true/false）单独存储，用于特殊处理
                 if eng in self.SPECIAL_VALUES:
                     self.value_translations[eng] = chn
                 else:
@@ -155,7 +196,7 @@ class TranslationLibrary:
         return self.translations.get(key, key)
 
     def get_section_translation(self, section: str) -> str:
-        """获取Section名称的翻译"""
+        """获取Section名称的翻译（英文->中文）"""
         return self.section_translations.get(section, section)
 
     def get_value_translation(self, value: str) -> str:
@@ -181,14 +222,38 @@ class TranslationLibrary:
 
 
 class INITranslator:
-    """INI文件翻译器"""
+    """
+    INI文件翻译器
+    负责解析INI文件并进行翻译处理
 
+    功能:
+        1. 逐行解析INI文件内容
+        2. 识别并翻译Section行（[section_name]）
+        3. 识别并翻译键值对行（key = value 或 key: value）
+        4. 保持文件格式（缩进、注释等）不变
+        5. 支持递归处理目录下的所有INI文件
+
+    支持的文件格式:
+        .ini 文件和 .template 文件
+    """
+
+    # 有效的文件扩展名
     VALID_EXTENSIONS: ClassVar[set[str]] = {'.ini', '.template'}
-    DEFAULT_EXCLUDES: ClassVar[set[str]] = {'.git', '.vscode', '__pycache__', '翻译', '翻译结果', 'scripts'}
 
-    # 预编译的正则表达式
+    # 默认排除的目录（这些目录下的文件不会被处理）
+    DEFAULT_EXCLUDES: ClassVar[set[str]] = {
+        '.git', '.vscode', '__pycache__',  # 系统/编辑器目录
+        '翻译', '翻译结果', 'scripts'       # 项目相关目录
+    }
+
+    # 预编译的正则表达式（提高匹配性能）
+    # 匹配Section行: 缩进 + [section名称] + 尾部空白
+    # 示例: "  [global_resource]  " -> groups: ("  ", "global_resource", "  ")
     SECTION_PATTERN: ClassVar[re.Pattern] = re.compile(r'^(\s*)\[([^\]]+)\](\s*)$')
+
+    # 匹配键值对行: 缩进 + key + 分隔符(:或=) + value + 尾部空白
     # 支持有value或只有key的情况（如 "key: value" 或 "key:"）
+    # 示例: "  name = 坦克  " -> groups: ("  ", "name", "=", "坦克", "  ")
     KV_PATTERN: ClassVar[re.Pattern] = re.compile(r'^(\s*)([^:=#\[]+?)([:=])(.*?)(\s*)$')
 
     def __init__(self, library: TranslationLibrary) -> None:
@@ -245,21 +310,102 @@ class INITranslator:
         return line
 
     def _translate_section_line(self, match: re.Match, stats: TranslationStats) -> str:
-        """翻译Section行"""
+        """
+        翻译Section行（格式: [section_name]）
+
+        处理流程（按优先级）:
+            1. 处理带#注释的section（分离注释部分）
+            2. 特殊处理 global_resource_XX 格式（硬编码规则）
+            3. 尝试完整section名称匹配（在section_translations中查找）
+            4. 处理带下划线的section（分割前缀和后缀，只翻译前缀）
+            5. 以上都不匹配则原样返回
+
+        Args:
+            match: 正则匹配结果，groups: (缩进, section名称, 尾部空白)
+            stats: 统计对象，用于记录翻译数量
+
+        Returns:
+            翻译后的section行字符串
+
+        示例:
+            [global_resource] -> [全局_资源]          （完整匹配）
+            [hiddenAction_陆军协防] -> [隐藏动作_陆军协防]  （前缀翻译）
+            [global_resource_123] -> [全局资源_123]   （特殊规则）
+        """
         indent, section_name, trailing = match.groups()
 
-        # 处理带注释的section
+        # 处理带注释的section（如 [section_name # 这是注释]）
         comment = ''
         if '#' in section_name:
             section_name, comment_part = section_name.split('#', 1)
             section_name = section_name.strip()
             comment = '#' + comment_part
 
+        original_section = section_name
+
+        # 0. 特殊处理 global_resource_XX 格式 -> 全局资源_XX
+        # 这是一个硬编码的特殊规则，用于处理铁锈战争的特殊section
+        if section_name.startswith('global_resource_'):
+            suffix = section_name[len('global_resource_'):]  # 提取XX部分
+            translated_section = f"全局资源_{suffix}"
+            stats.sections_translated += 1
+            return f"{indent}[{translated_section}]{trailing}{comment}"
+
+        # 1. 首先尝试完整section匹配（如 [global_resource] -> [全局_资源]）
+        # 在section_translations字典中查找完整匹配
         translated_section = self.lib.get_section_translation(section_name)
         if translated_section != section_name:
             stats.sections_translated += 1
+            return f"{indent}[{translated_section}]{trailing}{comment}"
 
-        return f"{indent}[{translated_section}]{trailing}{comment}"
+        # 2. 处理带下划线的section名称（如 [hiddenAction_陆军协防]）
+        # 分割前缀和后缀，只翻译前缀部分，后缀保持不变
+        # 这样可以处理带自定义后缀的section，如hiddenAction_XXX
+        if '_' in section_name:
+            translated = self._translate_prefixed_section(section_name)
+            if translated != section_name:
+                stats.sections_translated += 1
+                return f"{indent}[{translated}]{trailing}{comment}"
+
+        # 没有找到翻译，原样返回
+        return f"{indent}[{section_name}]{trailing}{comment}"
+
+    def _translate_prefixed_section(self, section_name: str) -> str:
+        """
+        翻译带前缀的section名称（如 hiddenAction_陆军协防 -> 隐藏动作_陆军协防）
+
+        功能:
+            将section名称按下划线分割为前缀和后缀，只翻译前缀部分
+            这样可以处理如 hiddenAction_XXX、core_XXX 等格式的section
+
+        Args:
+            section_name: section名称（不含方括号），如 "hiddenAction_陆军协防"
+
+        Returns:
+            翻译后的section名称，如 "隐藏动作_陆军协防"
+            如果前缀没有对应的翻译，则返回原名称
+
+        注意:
+            - 使用 split('_', 1) 只分割一次，确保后缀部分保持完整
+            - 前缀需要在翻译库中有对应的映射（如 [hiddenAction] = [隐藏动作]）
+            - 后缀部分（如陆军协防）不会被翻译，保持原样
+        """
+        # 分割前缀和后缀（只分割一次，保留后续所有内容）
+        # 例如: "hiddenAction_陆军协防" -> ["hiddenAction", "陆军协防"]
+        parts = section_name.split('_', 1)
+        if len(parts) != 2:
+            return section_name
+
+        prefix, suffix = parts
+
+        # 在section_translations中查找前缀的翻译（英文前缀 -> 中文前缀）
+        translated_prefix = self.lib.get_section_translation(prefix)
+        if translated_prefix == prefix:
+            # 前缀没有对应的翻译，返回原值不变
+            return section_name
+
+        # 找到了前缀翻译，组合成新名称（后缀保持原样）
+        return f"{translated_prefix}_{suffix}"
 
     def _translate_kv_line(self, match: re.Match, stats: TranslationStats) -> str:
         """翻译键值对行"""

@@ -1,16 +1,16 @@
-[core]
-copyFrom:"""
-ROOT:/作战单位/战力模块.ini,
-ROOT:/作战单位/地面模块.ini,
+[核心]
+复制与:"""
+ROOT:/作战单位/战力模块.ini, 
+ROOT:/作战单位/地面模块.ini, 
 ROOT:/作战单位/陆军模块.ini
 """
 #––「设定」––#
-[hiddenAction_攻击范围]
-alsoTriggerAction:陆军
-[hiddenAction_陆军]
-requireConditional:if not self.tags(includes="海") and not self.tags(includes="水")
-temporarilyAddTags:陆军,安全
-[hiddenAction_作战中控]
-autoTrigger:true
-requireConditional:if numberOfUnitsInTeam(withTag="作战区块",withinRange=690)==0
-spawnUnits:作战区块
+[隐藏行动_攻击范围]
+也执行动作:陆军
+[隐藏行动_陆军]
+需要条件:if not 自身有标签(包含标签="海") and not 自身有标签(包含标签="水")
+临时标签添加:陆军, 安全
+[隐藏行动_作战中控]
+自动触发:true
+需要条件:if 队伍中此单位数量(需标签="作战区块", 范围内=690)==0
+产生单位:作战区块

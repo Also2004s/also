@@ -278,7 +278,6 @@ effectOnDeathGroundCollision = 死亡撞击地面效果
 effectOnDeathIfUnbuilt = 没建造完成时死亡效果
 empty = 空
 endDirOffset = 末端角度偏移值
-enemy = 敌人
 energy = 能量
 energyMax = 能量值
 energyNeedsToRechargeToFull = 能量需要充满

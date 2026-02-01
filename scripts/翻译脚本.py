@@ -207,7 +207,7 @@ class INITranslator:
             return f"{indent}[{translated_section}]{trailing}{comment}\n"
         
         # 处理键值对 key: value 或 key = value
-        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line_content)
+        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.*?)(\s*)$', line_content)
         if kv_match:
             indent = kv_match.group(1)
             key = kv_match.group(2).strip()

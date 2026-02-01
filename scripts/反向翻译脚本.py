@@ -83,7 +83,7 @@ class ReverseTranslationLibrary:
                 
                 # 区分key翻译和value翻译，构建反向映射
                 if eng in ['true', 'false', 'TRUE', 'FALSE', 'True', 'False',
-                          'LAND', 'WATER', 'HOVER', 'AIR', 'OVER_CLIFF',
+                          'LAND', 'WATER', 'HOVER', 'AIR', 'OVER_CLIFF', 'OVER_CLIFF_WATER',
                           'AUTO', 'NONE']:
                     self.value_translations[chn] = eng
                 else:
@@ -209,7 +209,7 @@ class ReverseTranslator:
             return f"{indent}[{translated_section}]{trailing}{comment}\n"
         
         # 处理键值对 key: value 或 key = value
-        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.+?)(\s*)$', line_content)
+        kv_match = re.match(r'^(\s*)([^:=#\[]+?)([:=])(.*?)(\s*)$', line_content)
         if kv_match:
             indent = kv_match.group(1)
             key = kv_match.group(2).strip()

@@ -169,7 +169,7 @@ def scan_all_units(base_path):
         print(f"扫描目录: {dir_name}")
 
         for ini_file in target_dir.rglob('*.ini'):
-            if '模版' in ini_file.name or '模块' in ini_file.name:
+            if '模块' in ini_file.name:
                 continue
 
             data = parse_ini_file(ini_file)
@@ -315,7 +315,8 @@ def generate_report(units, output_path):
 
 def main():
     script_dir = Path(__file__).parent
-    base_path = script_dir.parent
+    # 脚本的父目录是 scripts，项目根目录是 scripts 的父目录
+    base_path = script_dir.parent.parent
 
     print("开始抓取单位数据...")
     print(f"项目路径: {base_path}\n")

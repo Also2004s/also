@@ -146,12 +146,38 @@ def format_size(size_bytes):
     return f"{size_bytes:.2f} TB"
 
 
+def get_mod_title(mod_info_path):
+    """从 mod-info.txt 中读取 title"""
+    try:
+        with open(mod_info_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.startswith('title:'):
+                    title = line[6:].strip()  # 去掉 'title:' 前缀
+                    # 移除可能存在的非法文件名字符
+                    import re
+                    title = re.sub(r'[<>:"/\\|?*]', '', title)
+                    return title
+    except Exception as e:
+        print(f"警告: 读取 mod-info.txt 失败: {e}")
+    return None
+
+
 def main():
     """主函数"""
-    # 固定输出文件名和路径
-    output_file = "人机的玩笑.rwmod"
-    source_dir = "."
-    output_dir = "D:/Users/Documents/MuMu共享文件夹/X/rustedWarfare/units"
+    # 修改源目录为编译后的输出目录
+    source_dir = r"D:\Users\Documents\MuMu共享文件夹\X\rustedWarfare\units\人机的玩笑"
+    output_dir = r"D:\Users\Documents\MuMu共享文件夹\X\rustedWarfare\units"
+    
+    # 尝试从 mod-info.txt 读取标题作为文件名
+    mod_info_path = os.path.join(source_dir, "mod-info.txt")
+    title = get_mod_title(mod_info_path)
+    
+    if title:
+        output_file = f"{title}.rwmod"
+        print(f"从 mod-info.txt 读取到标题: {title}")
+    else:
+        output_file = "人机的玩笑.rwmod"
+        print("使用默认文件名")
     
     # 确保输出目录存在
     output_path = Path(output_dir)

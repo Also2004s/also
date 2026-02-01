@@ -21,9 +21,35 @@ def calculate_power(hp, shield, attack_range, move_speed, damage):
     Y = (B + C) * 0.012
     return max(int(Y), 1)
 
+
+def get_combat_level(power):
+    """根据战力获取作战等级 C1-C10"""
+    if power >= 250:
+        return 'C10'
+    elif power >= 200:
+        return 'C9'
+    elif power >= 150:
+        return 'C8'
+    elif power >= 120:
+        return 'C7'
+    elif power >= 100:
+        return 'C6'
+    elif power >= 80:
+        return 'C5'
+    elif power >= 50:
+        return 'C4'
+    elif power >= 30:
+        return 'C3'
+    elif power >= 20:
+        return 'C2'
+    elif power >= 10:
+        return 'C1'
+    else:
+        return 'C1'  # 战力低于10的也归为C1
+
 def main():
     # 读取CSV
-    csv_path = Path('scripts/单位战力数据.csv')
+    csv_path = Path('scripts/数据集/单位战力数据.csv')
     if not csv_path.exists():
         print(f"错误: 找不到 {csv_path}")
         return
@@ -89,12 +115,19 @@ def main():
         cat_units = sorted(categories[cat_key], key=lambda x: x['ground_power'], reverse=True)
         
         for unit in cat_units:
+            # 如果有"对地"标签，添加C等级
+            tags = unit['tags']
+            if '对地' in tags:
+                level = get_combat_level(unit['ground_power'])
+                if level not in tags:  # 避免重复添加
+                    tags = f"{tags}, {level}" if tags else level
+            
             lines.append(f"【{idx}. {unit['name']}】")
             if cat_key == '建筑':
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 攻击范围: {unit['range']}")
             else:
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 护盾: {unit['shield']} | 攻击范围: {unit['range']} | 移速: {unit['speed']}")
-            lines.append(f"  - 标签: {unit['tags']}")
+            lines.append(f"  - 标签: {tags}")
             if unit['air_damage'] > 0:
                 lines.append(f"  对地战力: {unit['ground_power']} | 对空战力: {unit['air_power']}")
             else:

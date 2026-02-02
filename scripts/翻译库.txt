@@ -1,58 +1,72 @@
 # 铁锈战争 MOD 翻译库
-# 自动生成于 翻译分类结果.txt
 # 格式: 英文 = 中文
 # Section格式: [英文] = [中文]
+# 按功能模块分类整理
 
-# ================================================================================
-# Section 翻译
-# ================================================================================
+#================================================================
+# 一、配置节 (Section) 翻译
+#================================================================
+
+# --- 核心配置节 ---
 [ai] = [AI]
-[attack] = [攻击]
 [core] = [核心]
-[graphics] = [图像]
-[movement] = [移动]
-[hiddenAction] = [隐藏行动]
+[movement] = [运动]
+[resource] = [资源]
+[global_resource] = [全局资源]
 [action] = [行动]
-[animation] = [动画]
-[attachment] = [附属]
+[hiddenAction] = [隐藏行动]
+[graphics] = [图像]
 [decal] = [贴花]
 [effect] = [效果]
-[projectile] = [抛射体]
-[resource] = [资源]
 [turret] = [炮塔]
-[ai] = [AI]
+[attack] = [攻击]
+[animation] = [动画]
+[attachment] = [附属]
 [canBuild] = [可建造]
-[global_resource] = [全局资源]
+[projectile] = [抛射体]
 
-# ================================================================================
-# Value 特殊值翻译 (布尔值、枚举值等)
-# ================================================================================
+
+
+#================================================================
+# 二、基础值 (Value) 翻译 - 布尔值、枚举值、通用值
+#================================================================
+
+# --- 移动类型 ---
 AIR = 空中
 HOVER = 两栖
 LAND = 陆地
-NONE = 无
+WATER = 水面
 OVER_CLIFF = 跨悬崖
 OVER_CLIFF_WATER = 跨悬崖和水面
-WATER = 水面
 
-# ================================================================================
-# Key 翻译
-# ================================================================================
-@copyFromSection = 复制节
-@copyFrom_skipThisSection = 复制但跳过节
-KeyframeTimeScale = 帧时长缩放
-Section = 效果
+# --- 特殊值 ---
+NONE = 无
+full = 满
+empty = 空
+true = 真
+false = 假
+
+# --- 队伍/阵营 ---
+own = 己方
+neutral = 中立
+ally = 盟友
+enemy = 敌方
+any = 所有
+allyNotOwn = 除自己外盟友
+
+# --- 路径点类型 ---
+attack = 攻击
+attackMove = 移动攻击
+touchTarget = 靠近目标
+
+
+
+#================================================================
+# 三、基础属性 (Properties) 翻译 - 单位核心属性
+#================================================================
+# --- 路径操作---
+{
 activeWaypointTarget = 活动路径点目标
-addActionCooldownApplyToActions = 添加指定动作冷却时间
-addActionCooldownTime = 增加动作冷却时间
-addAllActionCooldownsTime = 增加所有动作冷却时间
-addEnergy = 增加能量
-addGlobalTeamTags = 添加全局标签
-addResources = 增加资源
-addResourcesScaledByAIHandicaps = 根据AI难度添加资源
-addResourcesWithLogic = 用逻辑添加资源
-addTransportedUnits = 增加被运输单位
-addUnitsIntoTransport = 添加单位到载具
 addWaypoint_maxTime = 添加路径点检索时间
 addWaypoint_position_fromAction = 添加路径点动作坐标
 addWaypoint_position_offsetFromSelf = 添加路径点坐标偏移
@@ -71,15 +85,61 @@ addWaypoint_triggerActionIfFailed = 添加路径点失败触发
 addWaypoint_triggerActionIfMatched = 添加路径点匹配触发
 addWaypoint_type = 添加路径点动作类型
 addWaypoint_unitType = 添加路径点单位类型
+copyWaypointsFrom = 复制路径来自
+self.hasActiveWaypoint = 自身有活动的路径点
+keepWaypointsNeedingMovement = 保持需要移动路径点
+clearActiveWaypoint = 清除当前路径点
+clearAllWaypoints = 清除所有路径点
+}
+# --- 逻辑类---
+{
+addResourcesWithLogic = 用逻辑添加资源
+}
+# --- AI---
+{
 ai_considerSameAsBuilding = AI作为建筑
 ai_isDisabled = AI被禁用
 ai_isHighPriority = AI高优先级
 ai_upgradePriority = AI升级优先级
-aimOffsetSpread = 瞄准偏移
 allowCaptureWhenNeutralByAI = 允许中立时被AI俘虏
+}
+# --- 动画类---
+{
+animateFrameEnd = 动画结束帧
+animateFrameLooping = 动画帧循环
+animateFramePingPong = 动画帧重放
+animateFrameSpeed = 动画帧速度
+animateFrameSpeedRandom = 动画帧随机速度
+animateFrameStart = 动画开始帧
+animation_TYPE_end = 动画_类型_结束
+animation_TYPE_pingPong = 动画_类型_膨胀
+animation_TYPE_scale_end = 动画_类型_缩放结束
+animation_TYPE_scale_start = 动画_类型_缩放开始
+animation_TYPE_speed = 动画_类型_速度
+animation_TYPE_start = 动画_类型_开始
+}
+
+# --- 其他（未分类） ---
+createMarker = 创建标记
+@global = 全局
+@define = 局部
+@copyFromSection = 复制节
+@copyFrom_skipThisSection = 复制但跳过节
+attachment = 附属
+movement = 运动
+select = 选择
+KeyframeTimeScale = 帧时长缩放
+addActionCooldownApplyToActions = 添加指定动作冷却时间
+addActionCooldownTime = 增加动作冷却时间
+addAllActionCooldownsTime = 增加所有动作冷却时间
+addEnergy = 增加能量
+addGlobalTeamTags = 添加全局标签
+addResources = 增加资源
+addResourcesScaledByAIHandicaps = 根据AI难度添加资源
+addTransportedUnits = 增加被运输单位
+addUnitsIntoTransport = 添加单位到载具
+aimOffsetSpread = 瞄准偏移
 allowMultipleInQueue = 允许多个队列
-ally = 盟友
-allyNotOwn = 除自己外盟友
 alpha = 透明度
 alsoEmitEffects = 也创造效果
 alsoEmitEffectsOnDeath = 死亡时创建效果
@@ -96,18 +156,6 @@ alwaysSinglePress = 总是按一次
 alwaysStartDirAtZero = 固定角度为零
 alwaysStartHeightAtZero = 固定高度为零
 alwaysVisibleInFog = 迷雾中显示
-animateFrameEnd = 动画结束帧
-animateFrameLooping = 动画帧循环
-animateFramePingPong = 动画帧重放
-animateFrameSpeed = 动画帧速度
-animateFrameSpeedRandom = 动画帧随机速度
-animateFrameStart = 动画开始帧
-animation_TYPE_end = 动画_类型_结束
-animation_TYPE_pingPong = 动画_类型_膨胀
-animation_TYPE_scale_end = 动画_类型_缩放结束
-animation_TYPE_scale_start = 动画_类型_缩放开始
-animation_TYPE_speed = 动画_类型_速度
-animation_TYPE_start = 动画_类型_开始
 anyRuleInGroup = 放置规则组
 areaDamage = 范围伤害
 areaDamageNoFalloff = 范围伤害不衰减
@@ -125,14 +173,13 @@ attach_x = x轴链接位置
 attach_y = Y轴链接位置
 attachedTo = 链接到
 attachedToUnit = 附着在单位上
-attachment = 附件
 attachments_addNewUnits = 附属添加单位
 attachments_deleteNumUnits = 附属删除单位数
 attachments_disconnect = 附属断开连接
 attachments_onlyOnSlots = 附属添加于槽位
 attachments_unload = 卸载附属
 attackMovement = 攻击移动类型
-attacking = 攻击
+attacking = 攻击中
 autoRepair = 可以自动修
 autoTargetingOnDeadTarget = 自动切换目标
 autoTargetingOnDeadTargetLead = 自动切换目标预判
@@ -193,9 +240,7 @@ canRepairUnitsOnlyWithTags = 仅允许维修特定标签单位
 canShoot = 可以开火
 cannotPlaceMessage = 失败信息
 checkEachTile = 检查每个地块
-clearActiveWaypoint = 清除当前路径点
 clearAllActionCooldowns = 清除所有动作冷却时间
-clearAllWaypoints = 清除所有路径点
 clearTurretTargetAfterFiring = 射击后重置炮塔目标
 color = 颜色
 constructionFootprint = 建筑覆盖范围
@@ -210,7 +255,6 @@ convertToNeutralIfNotTransporting = 卸载所有单位时恢复为中立
 convertTo_keepCurrentFields = 转换时保留字段
 convertTo_keepCurrentTags = 转换时保留标签
 copyFrom = 复制与
-copyWaypointsFrom = 复制路径来自
 createIncompleteIfParentIs = 创建随父单位
 createNeutral = 创建时中立
 createOnAggressiveTeam = 创建为敌对中立
@@ -271,7 +315,8 @@ displayType = 显示类型
 displayWhenZero = 为零时显示
 distance = 距离
 distanceSquared = 距离方差
-distanceBetween = 间距
+distanceBetween = 位距
+directionBetween = 间距
 dont_load = 禁止加载
 drawDirOffset = 绘制角度偏移
 drawFootWhenZoomedOut = 缩小时绘制脚
@@ -289,7 +334,6 @@ effectOnCreate = 创建时效果
 effectOnDeath = 死亡效果
 effectOnDeathGroundCollision = 死亡撞击地面效果
 effectOnDeathIfUnbuilt = 没建造完成时死亡效果
-empty = 空
 endDirOffset = 末端角度偏移值
 energy = 能量
 energyMax = 能量值
@@ -345,7 +389,6 @@ frameIndexRandom = 帧随机
 frame_height = 帧高度
 frame_width = 帧宽度
 friendlyFire = 友伤
-full = 满
 generation_active = 资源取得条件
 generation_credits = 资金获取
 generation_delay = 资金获取时间
@@ -462,7 +505,6 @@ isVisible = 可见性
 isVisibleToEnemies = 对敌人可见
 joinsGroupFormations = 加入队形
 keepAliveWhenParentDies = 保持子存活
-keepWaypointsNeedingMovement = 保持需要移动路径点
 landOnGround = 降落到地面
 largeHitEffect = 大的打击效果
 laserDefenceEnergyUse = 激光防御能量需求
@@ -531,7 +573,6 @@ nanoRangeForRepair = 维修距离
 nanoRangeForRepairIsMelee = 维修范围按近战逻辑
 nanoRepairSpeed = 维修速度
 nearestUnit = 接近单位
-neutral = 中立
 noneGlobalExtraPriority = 全图没有时优先级
 noneInBaseExtraPriority = 基地内没有时优先级
 notPassivelyTargetedByOtherUnits = 不被动地被其他单位瞄准
@@ -579,7 +620,6 @@ onlyWhileAlive = 存活时绘制
 onlyWithZoomLevelOrMore = 缩放到当前大小或更大时绘制
 order = 排序
 overrideAndReplace = 覆盖单位
-own = 己方
 parent = 父单位
 physics = 物理效果
 physicsGravity = 物理重力
@@ -660,14 +700,14 @@ self.dir = 自身角度
 self.energy = 自身能量
 self.energyIncludingQueued = 自身能量包括队列
 self.globalTeamTags = 有全局标签
-self.hasActiveWaypoint = 自身有活动的路径点
 self.hasFlag = 自身有标志
 self.hasParent = 自身有父单位
 self.hasResources = 自身有资源
-self.hasTakenDamage = 受到伤害
+self.hasTakenDamage = 自身受到伤害
 self.hasUnitInTeam = 自身队伍有单位
 self.height = 自身高度
 self.hp = 自身血量
+self.maxhp = 自身最大血量
 self.isAmmoEmpty = 自身弹药空
 self.isAtGroundHeight = 自身在地面高度
 self.isAtTopSpeed = 自身到最高速度

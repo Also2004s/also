@@ -520,8 +520,78 @@ class INITranslator:
         return sorted(valid_files)
 
 
+def check_duplicate_status():
+    """
+    检查查重状态，确保翻译库没有比查重报告更新
+    
+    Returns:
+        bool: True表示可以继续执行，False表示需要先运行查重
+    """
+    # 可能的查重报告路径
+    report_paths = [
+        "数据集/查重报告.txt",
+        "scripts/数据集/查重报告.txt",
+        "查重报告.txt"
+    ]
+    
+    # 翻译库路径
+    lib_paths = [
+        "scripts/翻译库.txt",
+        "翻译库.txt"
+    ]
+    
+    # 查找翻译库文件
+    lib_path = None
+    for path in lib_paths:
+        if os.path.exists(path):
+            lib_path = path
+            break
+    
+    if not lib_path:
+        print("警告: 找不到翻译库文件，无法进行日期检查")
+        return True
+    
+    # 查找查重报告文件
+    report_path = None
+    for path in report_paths:
+        if os.path.exists(path):
+            report_path = path
+            break
+    
+    if not report_path:
+        print("\n" + "=" * 60)
+        print("⚠️  警告: 查重报告不存在!")
+        print("=" * 60)
+        print("建议: 请先运行查重脚本以确保翻译库与项目同步")
+        print(f"  运行: py scripts/工具集/查重项目中文.py")
+        print("=" * 60)
+        return False
+    
+    # 获取文件修改时间
+    lib_mtime = os.path.getmtime(lib_path)
+    report_mtime = os.path.getmtime(report_path)
+    
+    if lib_mtime > report_mtime:
+        print("\n" + "=" * 60)
+        print("❌  拒绝执行: 翻译库比查重报告更新!")
+        print("=" * 60)
+        print(f"  翻译库: {lib_path} (修改时间: {os.path.ctime(lib_mtime)})")
+        print(f"  查重报告: {report_path} (修改时间: {os.path.ctime(report_mtime)})")
+        print("\n原因: 翻译库已更新，可能包含新的翻译项")
+        print("建议: 请先运行查重脚本以同步最新状态")
+        print(f"  运行: py scripts/工具集/查重项目中文.py")
+        print("=" * 60)
+        return False
+    
+    return True
+
+
 def main() -> None:
     """主函数"""
+    # 先检查查重状态
+    if not check_duplicate_status():
+        sys.exit(1)
+    
     input_dir = sys.argv[1] if len(sys.argv) >= 2 else "."
     output_dir = sys.argv[2] if len(sys.argv) >= 3 else input_dir
 

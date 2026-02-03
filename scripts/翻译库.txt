@@ -42,7 +42,7 @@ OVER_CLIFF_WATER = 跨悬崖和水面
 # --- 特殊值 ---
 NONE = 无
 full = 满
-empty = 空
+empty = 空的
 true = 真
 false = 假
 

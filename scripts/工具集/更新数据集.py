@@ -128,12 +128,16 @@ def main():
                 if existing_c_tag is None:  # 没有C标签时才添加
                     tags = f"{tags}, {level}" if tags else level
             
+            # 如果标签为空，添加"无"标签
+            if not tags or tags.strip() == '':
+                tags = '无'
+            
             lines.append(f"【{idx}. {unit['name']}】")
             if cat_key == '建筑':
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 攻击范围: {unit['range']}")
             else:
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 护盾: {unit['shield']} | 攻击范围: {unit['range']} | 移速: {unit['speed']}")
-            lines.append(f"  - 标签: {tags};")
+            lines.append(f"  - 标签: {tags}")
             if unit['air_damage'] > 0:
                 lines.append(f"  对地战力: {unit['ground_power']} | 对空战力: {unit['air_power']}")
             else:

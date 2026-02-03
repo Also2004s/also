@@ -1,67 +1,67 @@
-[core]
-copyFrom:战力模块.ini
-autoTriggerCooldownTime:2s
-autoTriggerCheckRate:every8Frames
-[global_resource_AI阶段]
-displayName:阶段
-displayColor: #42F2DC
-displayRoundedDown:false
-[global_resource_时间]
-displayName:游戏时间
-displayColor: #FFFFFF
-[global_resource_队伍]
-hidden:true
-[resource_抽取]
-hidden:true
+[核心]
+复制与:战力模块.ini
+自动触发间隔:2s
+自动触发检查率:every8Frames
+[全局资源_AI阶段]
+显示名称:阶段
+显示颜色: #42F2DC
+显示为整数:假
+[全局资源_时间]
+显示名称:游戏时间
+显示颜色: #FFFFFF
+[全局资源_队伍]
+隐藏:真
+[资源_抽取]
+隐藏:真
 
 #求救系统
-[hiddenAction_对地求救]
-autoTrigger:true
-requireConditional:if (numberOfUnitsInEnemyTeam(withTag="家", withinRange=320)+numberOfUnitsInEnemyTeam(withTag="对地", withinRange=225)*0.5+numberOfUnitsInEnemyTeam(withTag="地190", withinRange=255)+numberOfUnitsInEnemyTeam(withTag="地210", withinRange=280)+numberOfUnitsInEnemyTeam(withTag="地240", withinRange=310)+numberOfUnitsInEnemyTeam(withTag="地310", withinRange=365)+numberOfUnitsInEnemyTeam(withTag="地390", withinRange=420)+numberOfUnitsInEnemyTeam(withTag="炮塔I", withinRange=180)+numberOfUnitsInEnemyTeam(withTag="机枪塔I", withinRange=195)+numberOfUnitsInEnemyTeam(withTag="机枪塔II", withinRange=335)+numberOfUnitsInEnemyTeam(withTag="火炮塔I", withinRange=365)+numberOfUnitsInEnemyTeam(withTag="火炮塔II", withinRange=475)+numberOfUnitsInEnemyTeam(withTag="闪电塔I", withinRange=220)+numberOfUnitsInEnemyTeam(withTag="闪电塔II", withinRange=260))>=(numberOfUnitsInTeam(withTag="激光防御塔", withinRange=95)+numberOfUnitsInTeam(withTag="对地", withinRange=165)*0.25+0.05) and self.tags(includes="安全")
-temporarilyRemoveTags:安全
-temporarilyAddTags:对地求救
-[hiddenAction_对地解除]
-autoTrigger:true
-requireConditional:if (numberOfUnitsInEnemyTeam(withTag="家", withinRange=320)+numberOfUnitsInEnemyTeam(withTag="对地", withinRange=225)*0.5+numberOfUnitsInEnemyTeam(withTag="地190", withinRange=255)+numberOfUnitsInEnemyTeam(withTag="地210", withinRange=280)+numberOfUnitsInEnemyTeam(withTag="地240", withinRange=310)+numberOfUnitsInEnemyTeam(withTag="地310", withinRange=380)+numberOfUnitsInEnemyTeam(withTag="地390", withinRange=420)+numberOfUnitsInEnemyTeam(withTag="炮塔I", withinRange=180)+numberOfUnitsInEnemyTeam(withTag="机枪塔I", withinRange=195)+numberOfUnitsInEnemyTeam(withTag="机枪塔II", withinRange=335)+numberOfUnitsInEnemyTeam(withTag="火炮塔I", withinRange=365)+numberOfUnitsInEnemyTeam(withTag="火炮塔II", withinRange=475)+numberOfUnitsInEnemyTeam(withTag="闪电塔I", withinRange=220)+numberOfUnitsInEnemyTeam(withTag="闪电塔II", withinRange=260))<(numberOfUnitsInTeam(withTag="激光防御塔", withinRange=95)+numberOfUnitsInTeam(withTag="对地", withinRange=165)*0.25+0.05) and self.tags(includes="对地求救")
-temporarilyRemoveTags:对地求救
+[隐藏行动_对地求救]
+自动触发:真
+需要条件:if (敌人有此单位数量(需标签="家", 范围内=320)+敌人有此单位数量(需标签="对地", 范围内=225)*0.5+敌人有此单位数量(需标签="地190", 范围内=255)+敌人有此单位数量(需标签="地210", 范围内=280)+敌人有此单位数量(需标签="地240", 范围内=310)+敌人有此单位数量(需标签="地310", 范围内=365)+敌人有此单位数量(需标签="地390", 范围内=420)+敌人有此单位数量(需标签="炮塔I", 范围内=180)+敌人有此单位数量(需标签="机枪塔I", 范围内=195)+敌人有此单位数量(需标签="机枪塔II", 范围内=335)+敌人有此单位数量(需标签="火炮塔I", 范围内=365)+敌人有此单位数量(需标签="火炮塔II", 范围内=475)+敌人有此单位数量(需标签="闪电塔I", 范围内=220)+敌人有此单位数量(需标签="闪电塔II", 范围内=260))>=(队伍中此单位数量(需标签="激光防御塔", 范围内=95)+队伍中此单位数量(需标签="对地", 范围内=165)*0.25+0.05) and 自身有标签(包含标签="安全")
+临时标签删除:安全
+临时标签添加:对地求救
+[隐藏行动_对地解除]
+自动触发:真
+需要条件:if (敌人有此单位数量(需标签="家", 范围内=320)+敌人有此单位数量(需标签="对地", 范围内=225)*0.5+敌人有此单位数量(需标签="地190", 范围内=255)+敌人有此单位数量(需标签="地210", 范围内=280)+敌人有此单位数量(需标签="地240", 范围内=310)+敌人有此单位数量(需标签="地310", 范围内=380)+敌人有此单位数量(需标签="地390", 范围内=420)+敌人有此单位数量(需标签="炮塔I", 范围内=180)+敌人有此单位数量(需标签="机枪塔I", 范围内=195)+敌人有此单位数量(需标签="机枪塔II", 范围内=335)+敌人有此单位数量(需标签="火炮塔I", 范围内=365)+敌人有此单位数量(需标签="火炮塔II", 范围内=475)+敌人有此单位数量(需标签="闪电塔I", 范围内=220)+敌人有此单位数量(需标签="闪电塔II", 范围内=260))<(队伍中此单位数量(需标签="激光防御塔", 范围内=95)+队伍中此单位数量(需标签="对地", 范围内=165)*0.25+0.05) and 自身有标签(包含标签="对地求救")
+临时标签删除:对地求救
 
-[hiddenAction_安全]
-autoTrigger:if not self.tags(includes="对地求救") or not numberOfUnitsInEnemyTeam(withinRange=460, greaterThan=0)
-requireConditional:if self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI
-clearAllWaypoints:true
-setResourcesWithLogic:逃跑冷却:-12
-temporarilyAddTags:安全
+[隐藏行动_安全]
+自动触发:if not 自身有标签(包含标签="对地求救") or not 敌人有此单位数量(范围内=460, 超过=0)
+需要条件:if 自身资源.逃跑冷却>=0 and not 自身有标签(包含标签="安全") and 自身属于AI控制
+清除所有路径点:真
+用逻辑设置资源:逃跑冷却:-12
+临时标签添加:安全
 
 #––「逃跑模块」––#
-[resource_逃跑冷却]
-displayName:逃跑
-[hiddenAction_减少冷却]
-autoTrigger:true
-requireConditional:if not self.tags(includes="安全") and self.resource.逃跑冷却<0 and self.customTimer(laterThanSeconds=1) and self.isControlledByAI
-resetCustomTimer:if self.customTimer(laterThanSeconds=2)
-addResources:逃跑冷却:1
-[hiddenAction_逃跑]
-autoTrigger:true
-requireConditional:if not self.tags(includes="安全") and not self.tags(includes="已锁定") and self.isControlledByAI and not self.hasActiveWaypoint(type='touchTarget')
-clearAllWaypoints:true
-addWaypoint_prepend:true
-addWaypoint_type:touchTarget
-addWaypoint_target_nearestUnit_tagged:修复
-addWaypoint_target_mapMustBeReachable:true
-addWaypoint_target_nearestUnit_team:ally
-addWaypoint_triggerActionIfFailed:去修复
-[hiddenAction_去修复]
-addWaypoint_type:touchTarget
-addWaypoint_target_mapMustBeReachable:false
-addWaypoint_target_nearestUnit_tagged:家
-addWaypoint_target_nearestUnit_team:own
+[资源_逃跑冷却]
+显示名称:逃跑
+[隐藏行动_减少冷却]
+自动触发:真
+需要条件:if not 自身有标签(包含标签="安全") and 自身资源.逃跑冷却<0 and 自身自定义计时器(指定时间后=1) and 自身属于AI控制
+重置自定义计时器:if 自身自定义计时器(指定时间后=2)
+增加资源:逃跑冷却:1
+[隐藏行动_逃跑]
+自动触发:真
+需要条件:if not 自身有标签(包含标签="安全") and not 自身有标签(包含标签="已锁定") and 自身属于AI控制 and not 自身有活动的路径点(type='靠近目标')
+清除所有路径点:真
+添加路径点序列位置:真
+添加路径点动作类型:靠近目标
+添加路径点检索标签:修复
+添加路径点路径可达:真
+添加路径点靠近队伍:盟友
+添加路径点失败触发:去修复
+[隐藏行动_去修复]
+添加路径点动作类型:靠近目标
+添加路径点路径可达:假
+添加路径点检索标签:家
+添加路径点靠近队伍:己方
 
-[hiddenAction_无防空保护]
-autoTrigger:true
-requireConditional:if (numberOfUnitsInTeam(withTag="对空", withinRange=350)+numberOfUnitsInTeam(withTag="家", withinRange=280)+numberOfUnitsInTeam(withTag="防空", withinRange=400))<=0 and not self.tags(includes="对空")
-temporarilyAddTags:无防空保护, 可提取
-[hiddenAction_有防空保护]
-autoTrigger:true
-requireConditional:if (numberOfUnitsInTeam(withTag="对空", withinRange=350)+numberOfUnitsInTeam(withTag="家", withinRange=280)+numberOfUnitsInTeam(withTag="防空", withinRange=400))>0
-temporarilyRemoveTags:无防空保护
-temporarilyAddTags:可提取
+[隐藏行动_无防空保护]
+自动触发:真
+需要条件:if (队伍中此单位数量(需标签="对空", 范围内=350)+队伍中此单位数量(需标签="家", 范围内=280)+队伍中此单位数量(需标签="防空", 范围内=400))<=0 and not 自身有标签(包含标签="对空")
+临时标签添加:无防空保护, 可提取
+[隐藏行动_有防空保护]
+自动触发:真
+需要条件:if (队伍中此单位数量(需标签="对空", 范围内=350)+队伍中此单位数量(需标签="家", 范围内=280)+队伍中此单位数量(需标签="防空", 范围内=400))>0
+临时标签删除:无防空保护
+临时标签添加:可提取

@@ -1,54 +1,54 @@
-[core]
-copyFrom:"""
-ROOT:/作战单位/战力模块.ini,
-ROOT:/作战单位/地面模块.ini,
+[核心]
+复制与:"""
+ROOT:/作战单位/战力模块.ini, 
+ROOT:/作战单位/地面模块.ini, 
 ROOT:/作战单位/陆军模块.ini
 """
 #––「设定」––#
-[hiddenAction_攻击范围]
-alsoTriggerAction:陆军
-[hiddenAction_陆军]
-requireConditional:if not self.tags(includes="海") and not self.tags(includes="水")
-temporarilyAddTags:陆军
-[hiddenAction_作战中控]
-autoTrigger:true
-requireConditional:if numberOfUnitsInTeam(withTag="作战区块",withinRange=690)==0
-spawnUnits:作战区块
+[隐藏行动_攻击范围]
+也执行动作:陆军
+[隐藏行动_陆军]
+需要条件:if not 自身有标签(包含标签="海") and not 自身有标签(包含标签="水")
+临时标签添加:陆军
+[隐藏行动_作战中控]
+自动触发:真
+需要条件:if 队伍中此单位数量(需标签="作战区块", 范围内=690)==0
+产生单位:作战区块
 
 
-[hiddenAction_安全]
-autoTrigger:true
-requireConditional:if self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI or not numberOfUnitsInEnemyTeam(withinRange=480,greaterThan=0) and self.resource.逃跑冷却>=0 and not self.tags(includes="安全") and self.isControlledByAI
-clearAllWaypoints:true
-setResourcesWithLogic:逃跑冷却:-4
-temporarilyAddTags:安全
+[隐藏行动_安全]
+自动触发:真
+需要条件:if 自身资源.逃跑冷却>=0 and not 自身有标签(包含标签="安全") and 自身属于AI控制 or not 敌人有此单位数量(范围内=480, 超过=0) and 自身资源.逃跑冷却>=0 and not 自身有标签(包含标签="安全") and 自身属于AI控制
+清除所有路径点:真
+用逻辑设置资源:逃跑冷却:-4
+临时标签添加:安全
 
 #––「作战模块」––#
-[hiddenAction_陆军追不上]
-autoTrigger:true
-alsoTriggerAction:追不上
-alsoTriggerOrQueueActionConditional:if self.maxhp<=1200 or self.hp<=self.maxhp*0.5
-requireConditional:if distanceBetween(self.activeWaypointTarget,self)>(self.resource.攻击范围) and (self.resource.攻击范围)<(activeWaypointTarget.resource.攻击范围) and self.hasActiveWaypoint(type='attack') and activeWaypointTarget.tags(includes='对地') and not self.tags(includes="已定制") and numberOfUnitsInTeam(withTag="开始进攻",withinRange=500,lessThan=1) and self.isControlledByAI
+[隐藏行动_陆军追不上]
+自动触发:真
+也执行动作:追不上
+也执行队列或需执行条件:if 自身最大血量<=1200 or 自身血量<=自身最大血量*0.5
+需要条件:if 位距(self.活动路径点目标, self)>(自身资源.攻击范围) and (自身资源.攻击范围)<(活动路径点目标.resource.攻击范围) and 自身有活动的路径点(type='攻击') and 活动路径点目标.tags(包含标签='对地') and not 自身有标签(包含标签="已定制") and 队伍中此单位数量(需标签="开始进攻", 范围内=500, 少于=1) and 自身属于AI控制
 #––「作战模块」––#
-[hiddenAction_追不上]
-temporarilyRemoveTags:安全
-[hiddenAction_控距]
-autoTrigger:true
-requireConditional:if self.resource.攻击范围>=190 and not self.tags(includes="控距") and distanceBetween(self.attacking,self)<(self.resource.攻击范围-5) and self.tags(includes="对地") and attacking.tags(includes='对地') and not self.tags(includes="已锁定") and self.isAttacking and self.tags(includes="安全") and self.isControlledByAI
-temporarilyAddTags:控距
-clearAllWaypoints:true
-addWaypoint_type:move
-addWaypoint_target_fromReference:createMarker(x=attacking.x,y=attacking.y,dir=directionBetween(self,self.attacking)).getOffsetRelative(y=-400)
-[hiddenAction_控距停止]
-autoTrigger:true
-requireConditional:if distanceBetween(self.attacking,self)>=(self.resource.攻击范围) and self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全") or not self.isAttacking and self.tags(includes="控距") and self.isControlledByAI and self.hasActiveWaypoint and self.tags(includes="安全")
-temporarilyRemoveTags:控距
-clearAllWaypoints:true
+[隐藏行动_追不上]
+临时标签删除:安全
+[隐藏行动_控距]
+自动触发:真
+需要条件:if 自身资源.攻击范围>=190 and not 自身有标签(包含标签="控距") and 位距(self.攻击中, self)<(自身资源.攻击范围-5) and 自身有标签(包含标签="对地") and 攻击中.tags(包含标签='对地') and not 自身有标签(包含标签="已锁定") and 自身在攻击 and 自身有标签(包含标签="安全") and 自身属于AI控制
+临时标签添加:控距
+清除所有路径点:真
+添加路径点动作类型:移动
+添加路径点来自参考:创建标记(x=攻击中.x, y=攻击中.y, dir=间距(self, self.攻击中)).获取相对偏移(y=-400)
+[隐藏行动_控距停止]
+自动触发:真
+需要条件:if 位距(self.攻击中, self)>=(自身资源.攻击范围) and 自身在攻击 and 自身有标签(包含标签="控距") and 自身属于AI控制 and 自身有活动的路径点 and 自身有标签(包含标签="安全") or not 自身在攻击 and 自身有标签(包含标签="控距") and 自身属于AI控制 and 自身有活动的路径点 and 自身有标签(包含标签="安全")
+临时标签删除:控距
+清除所有路径点:真
 
 #––「逃跑模块」––#
-[resource_逃跑冷却]
-displayName:逃跑
-[hiddenAction_减少冷却]
-autoTrigger:true
-requireConditional:if not self.tags(includes="安全") and self.resource.逃跑冷却<0 and self.customTimer(laterThanSeconds=1) and self.isControlledByAI
-addResources:逃跑冷却:1
+[资源_逃跑冷却]
+显示名称:逃跑
+[隐藏行动_减少冷却]
+自动触发:真
+需要条件:if not 自身有标签(包含标签="安全") and 自身资源.逃跑冷却<0 and 自身自定义计时器(指定时间后=1) and 自身属于AI控制
+增加资源:逃跑冷却:1

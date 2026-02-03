@@ -522,7 +522,7 @@ class INITranslator:
 
 def check_duplicate_status():
     """
-    检查查重状态，确保翻译库没有比查重报告更新
+    检查查重状态，确保翻译库没有比查重报告更新，且查重报告显示"可进行翻译"
     
     Returns:
         bool: True表示可以继续执行，False表示需要先运行查重
@@ -562,8 +562,8 @@ def check_duplicate_status():
         print("\n" + "=" * 60)
         print("⚠️  警告: 查重报告不存在!")
         print("=" * 60)
-        print("建议: 请先运行查重脚本以确保翻译库与项目同步")
-        print(f"  运行: py scripts/工具集/查重项目中文.py")
+        print("建议: 请先运行一键查重工具以确保翻译库与项目同步")
+        print(f"  运行: py scripts/工具集/一键查重.py")
         print("=" * 60)
         return False
     
@@ -578,12 +578,39 @@ def check_duplicate_status():
         print(f"  翻译库: {lib_path} (修改时间: {os.path.ctime(lib_mtime)})")
         print(f"  查重报告: {report_path} (修改时间: {os.path.ctime(report_mtime)})")
         print("\n原因: 翻译库已更新，可能包含新的翻译项")
-        print("建议: 请先运行查重脚本以同步最新状态")
-        print(f"  运行: py scripts/工具集/查重项目中文.py")
+        print("建议: 请先运行一键查重工具以同步最新状态")
+        print(f"  运行: py scripts/工具集/一键查重.py")
         print("=" * 60)
         return False
     
-    return True
+    # 检查查重报告内容，确认是否显示"可进行翻译"
+    try:
+        with open(report_path, 'r', encoding='utf-8') as f:
+            report_content = f.read()
+        
+        if "无查重内容，可进行翻译" in report_content:
+            return True
+        elif "具有查重内容，请审核" in report_content:
+            print("\n" + "=" * 60)
+            print("❌  拒绝执行: 查重报告显示有待审核内容!")
+            print("=" * 60)
+            print("原因: 查重工具检测到重复或需要审核的内容")
+            print("建议: 请先处理查重报告中标记的问题")
+            print(f"  查看报告: {report_path}")
+            print("=" * 60)
+            return False
+        else:
+            # 报告存在但无法识别状态，视为需要审核
+            print("\n" + "=" * 60)
+            print("⚠️  警告: 无法识别查重报告状态!")
+            print("=" * 60)
+            print("建议: 请先运行一键查重工具以更新报告")
+            print(f"  运行: py scripts/工具集/一键查重.py")
+            print("=" * 60)
+            return False
+    except Exception as e:
+        print(f"\n警告: 读取查重报告失败: {e}")
+        return True
 
 
 def main() -> None:

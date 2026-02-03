@@ -60,7 +60,7 @@ def parse_ini_file(filepath):
             data['attack_range'] = range_match.group(1)
 
     # 提取移动速度
-    move_section = re.search(r'\[移动\](.*?)(?=\[|\Z)', content, re.DOTALL | re.IGNORECASE)
+    move_section = re.search(r'\[运动\](.*?)(?=\[|\Z)', content, re.DOTALL | re.IGNORECASE)
     if move_section:
         move_content = move_section.group(1)
         speed_match = re.search(r'^(?:移动速度|moveSpeed)[:：]\s*([\d.]+)', move_content, re.MULTILINE | re.IGNORECASE)
@@ -334,7 +334,7 @@ def main():
     print(f"=================================\n")
 
     # CSV格式
-    csv_file = script_dir / '单位战力数据.csv'
+    csv_file = script_dir.parent / '数据集' / '单位战力数据.csv'
     with open(csv_file, 'w', encoding='utf-8-sig') as f:
         f.write("名称,分类,血量,护盾,攻击范围,移速,伤害量,对空伤害量,对地战力,对空战力,标签,文件路径\n")
         for unit in all_units:

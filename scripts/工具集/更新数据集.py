@@ -119,7 +119,13 @@ def main():
             tags = unit['tags']
             if '对地' in tags:
                 level = get_combat_level(unit['ground_power'])
-                if level not in tags:  # 避免重复添加
+                # 检查是否已有C标签，如果有则不再添加，只保留第一个
+                existing_c_tag = None
+                for c_level in ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10']:
+                    if c_level in tags:
+                        existing_c_tag = c_level
+                        break
+                if existing_c_tag is None:  # 没有C标签时才添加
                     tags = f"{tags}, {level}" if tags else level
             
             lines.append(f"【{idx}. {unit['name']}】")
@@ -127,7 +133,7 @@ def main():
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 攻击范围: {unit['range']}")
             else:
                 lines.append(f"  - 伤害量: {unit['damage']} | 血量: {unit['hp']} | 护盾: {unit['shield']} | 攻击范围: {unit['range']} | 移速: {unit['speed']}")
-            lines.append(f"  - 标签: {tags}")
+            lines.append(f"  - 标签: {tags};")
             if unit['air_damage'] > 0:
                 lines.append(f"  对地战力: {unit['ground_power']} | 对空战力: {unit['air_power']}")
             else:

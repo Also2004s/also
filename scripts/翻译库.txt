@@ -56,15 +56,20 @@ allyNotOwn = 除自己外盟友
 
 # --- 路径点类型 ---
 move = 移动
+build = 建立
 attack = 攻击
 attackMove = 移动攻击
 touchTarget = 靠近目标
 
-
+created = 创建
 
 #================================================================
 # 三、基础属性 (Properties) 翻译 - 单位核心属性
 #================================================================
+
+every8Frames = 每8帧
+every4Frames = 每4帧
+everyFrames = 每帧
 # --- 路径操作---
 {
 activeWaypointTarget = 活动路径点目标
@@ -181,6 +186,7 @@ self.transportingUnitWithTags = 自身运输单位有标签
 }
 
 # --- 其他（未分类） ---
+canBuild = 能建造
 createMarker = 创建标记
 @global = 全局
 @define = 局部
@@ -219,6 +225,7 @@ alwaysStartHeightAtZero = 固定高度为零
 alwaysVisibleInFog = 迷雾中显示
 anyRuleInGroup = 放置规则组
 areaDamage = 范围伤害
+maxTurnSpeed = 最大转弯速度
 areaDamageNoFalloff = 范围伤害不衰减
 areaExpandTime = 范围扩展时间
 areaHitAirAndLandAtSameTime = 范围武器同时攻击空中和地面
@@ -694,7 +701,6 @@ playSoundAtUnit = 播放声音至单位
 playSoundGlobally = 播放声音至全图
 playSoundToPlayer = 播放声音至玩家
 playSoundToPlayerOnQueue = 队列播放声音
-pos = 位置
 price = 价格
 prioritizeParentsMainTarget = 优先考虑父单位的主要目标
 priority = 优先级
@@ -781,7 +787,7 @@ shoot_light = 开火闪光
 shoot_sound = 开火音效
 shoot_sound_vol = 开火音效大小
 shouldResetTurret = 空闲自动归位
-shouldRevealFog = 揭开迷雾
+shouldRevealFog = 揭开迷雾的
 showActionsWithMixedSelectionIfOtherUnitsHaveTag = 混合所选单位所显示的行为
 showAllActionsFrom = 显示所有操作来源
 showEnergyBar = 显示能量条

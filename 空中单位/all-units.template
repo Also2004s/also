@@ -1,90 +1,90 @@
-[core]
-autoTriggerCooldownTime:2s
-autoTriggerCheckRate:every8Frames
+[核心]
+自动触发间隔:2s
+自动触发检查率:每8帧
 #空军通用模块
-[global_resource_AI阶段]
-displayName:阶段
-displayColor: #E8FFE8
-displayRoundedDown:false
-[global_resource_AI难度]
-hidden:true
-[global_resource_时间]
-displayName:游戏时间
-displayColor: #FFFFFF
-[global_resource_概率]
-hidden:true
+[全局资源_AI阶段]
+显示名称:阶段
+显示颜色: #E8FFE8
+显示为整数:假
+[全局资源_AI难度]
+隐藏:真
+[全局资源_时间]
+显示名称:游戏时间
+显示颜色: #FFFFFF
+[全局资源_概率]
+隐藏:真
 
 #––「攻击范围」––#
-[resource_攻击范围]
-hidden:true
-[hiddenAction_攻击范围]
-autoTriggerOnEvent:created
-setResourcesWithLogic:攻击范围=${attack.maxAttackRange}
-temporarilyAddTags:安全
+[资源_攻击范围]
+隐藏:真
+[隐藏行动_攻击范围]
+自动触发事件:创建
+用逻辑设置资源:攻击范围=${攻击.攻击距离}
+临时标签添加:安全
 
 #––「空危模块」––#
-[hiddenAction_空危]
+[隐藏行动_空危]
 #1.防止重拦被地面防空单位白嫖的同时判断我方对地单位能否对对方产生威胁 2.防止空对地单位被拦截白嫖
-autoTrigger:true
-requireConditional:if (numberOfUnitsInTeam(withTag="空对地", withinRange=180)+numberOfUnitsInTeam(withTag="对地", withinRange=120)*2.8)<(numberOfUnitsInEnemyTeam(withTag="家", withinRange=350)*3+numberOfUnitsInEnemyTeam(withTag="对空", withinRange=280)*1.2+numberOfUnitsInEnemyTeam(withTag="防空", withinRange=310)*3+numberOfUnitsInEnemyTeam(withTag="中防空", withinRange=390)*5+numberOfUnitsInEnemyTeam(withTag="大防空", withinRange=465)*9) or numberOfUnitsInTeam(withTag="拦截", withinRange=500, lessThan=1) or (numberOfUnitsInTeam(withTag="拦截", withinRange=500))<(numberOfUnitsInEnemyTeam(withTag="拦截", withinRange=810)) and numberOfUnitsInEnemyTeam(withTag="拦截", withinRange=500, lessThan=1) and self.tags(includes="安全")
-temporarilyRemoveTags:安全
-[hiddenAction_空危解除]
-autoTrigger:true
-requireConditional:if (numberOfUnitsInTeam(withTag="空对地", withinRange=180)+numberOfUnitsInTeam(withTag="对地", withinRange=120)*2.8)>=(numberOfUnitsInEnemyTeam(withTag="家", withinRange=350)*3+numberOfUnitsInEnemyTeam(withTag="对空", withinRange=280)*1.2+numberOfUnitsInEnemyTeam(withTag="防空", withinRange=310)*3+numberOfUnitsInEnemyTeam(withTag="中防空", withinRange=390)*5+numberOfUnitsInEnemyTeam(withTag="大防空", withinRange=465)*9) or (numberOfUnitsInTeam(withTag="拦截", withinRange=500))>(numberOfUnitsInEnemyTeam(withTag="拦截", withinRange=810)) and not self.tags(includes="安全") and self.resource.逃跑冷却>=0
-setResourcesWithLogic:逃跑冷却:-4
-temporarilyAddTags:安全
-resetCustomTimer:true
+自动触发:真
+需要条件:if (队伍中此单位数量(需标签="空对地", 范围内=180)+队伍中此单位数量(需标签="对地", 范围内=120)*2.8)<(敌人有此单位数量(需标签="家", 范围内=350)*3+敌人有此单位数量(需标签="对空", 范围内=280)*1.2+敌人有此单位数量(需标签="防空", 范围内=310)*3+敌人有此单位数量(需标签="中防空", 范围内=390)*5+敌人有此单位数量(需标签="大防空", 范围内=465)*9) or 队伍中此单位数量(需标签="拦截", 范围内=500, 少于=1) or (队伍中此单位数量(需标签="拦截", 范围内=500))<(敌人有此单位数量(需标签="拦截", 范围内=810)) and 敌人有此单位数量(需标签="拦截", 范围内=500, 少于=1) and 自身有标签(包含标签="安全")
+临时标签删除:安全
+[隐藏行动_空危解除]
+自动触发:真
+需要条件:if (队伍中此单位数量(需标签="空对地", 范围内=180)+队伍中此单位数量(需标签="对地", 范围内=120)*2.8)>=(敌人有此单位数量(需标签="家", 范围内=350)*3+敌人有此单位数量(需标签="对空", 范围内=280)*1.2+敌人有此单位数量(需标签="防空", 范围内=310)*3+敌人有此单位数量(需标签="中防空", 范围内=390)*5+敌人有此单位数量(需标签="大防空", 范围内=465)*9) or (队伍中此单位数量(需标签="拦截", 范围内=500))>(敌人有此单位数量(需标签="拦截", 范围内=810)) and not 自身有标签(包含标签="安全") and 自身资源.逃跑冷却>=0
+用逻辑设置资源:逃跑冷却:-4
+临时标签添加:安全
+重置自定义计时器:真
 
 
 #––「逃跑模块」––#
-[resource_逃跑冷却]
-displayName:逃跑
-[hiddenAction_逃跑]
-autoTrigger:true
-requireConditional:if not self.tags(includes="安全") and not self.tags(includes="已锁定") and self.isControlledByAI and self.customTimer(laterThanSeconds=1) and not self.hasActiveWaypoint(type='touchTarget')
-resetCustomTimer:if self.customTimer(laterThanSeconds=1.2)
-addResources:逃跑冷却:1
-addWaypoint_type:touchTarget
-addWaypoint_target_nearestUnit_tagged:修复
-clearAllWaypoints:true
-addWaypoint_target_nearestUnit_team:own
-addWaypoint_target_mapMustBeReachable:true
-addWaypoint_triggerActionIfFailed:去修复
-[hiddenAction_去修复]
-addWaypoint_type:touchTarget
-addWaypoint_target_nearestUnit_tagged:家
-addWaypoint_target_nearestUnit_team:own
+[资源_逃跑冷却]
+显示名称:逃跑
+[隐藏行动_逃跑]
+自动触发:真
+需要条件:if not 自身有标签(包含标签="安全") and not 自身有标签(包含标签="已锁定") and 自身属于AI控制 and 自身自定义计时器(指定时间后=1) and not 自身有活动的路径点(type='靠近目标')
+重置自定义计时器:if 自身自定义计时器(指定时间后=1.2)
+增加资源:逃跑冷却:1
+添加路径点动作类型:靠近目标
+添加路径点检索标签:修复
+清除所有路径点:真
+添加路径点靠近队伍:己方
+添加路径点路径可达:真
+添加路径点失败触发:去修复
+[隐藏行动_去修复]
+添加路径点动作类型:靠近目标
+添加路径点检索标签:家
+添加路径点靠近队伍:己方
 
 #––「攻击模块」––#
-[hiddenAction_攻击优先级]
-autoTrigger:if self.tags(includes="安全") and self.tags(includes="空对地") and not self.tags(includes="已定制") and self.isAttacking and self.isControlledByAI and self.customTimer(laterThanSeconds=1)
-resetCustomTimer:true
-requireConditional:if numberOfUnitsInEnemyTeam(withTag="建造", withinRange=310, greaterThan=0) or numberOfUnitsInEnemyTeam(withTag="激光防御塔", withinRange=310, greaterThan=0) or numberOfUnitsInEnemyTeam(withTag="对空", withinRange=310, greaterThan=0)
-addWaypoint_target_mapMustBeReachable:true
-clearAllWaypoints:true
-addWaypoint_type:attack
-addWaypoint_target_nearestUnit_tagged:建造
-addWaypoint_target_nearestUnit_maxRange:310
-addWaypoint_target_nearestUnit_team:enemy
-addWaypoint_triggerActionIfFailed:攻击激光
-[hiddenAction_攻击激光]
-addWaypoint_target_mapMustBeReachable:true
-addWaypoint_type:attack
-addWaypoint_target_nearestUnit_tagged:激光防御塔
-addWaypoint_target_nearestUnit_maxRange:310
-addWaypoint_target_nearestUnit_team:enemy
-addWaypoint_triggerActionIfFailed:攻击对空
-[hiddenAction_攻击对空]
-addWaypoint_target_mapMustBeReachable:true
-addWaypoint_type:attack
-addWaypoint_target_nearestUnit_tagged:对空
-addWaypoint_target_nearestUnit_maxRange:310
-addWaypoint_target_nearestUnit_team:enemy
+[隐藏行动_攻击优先级]
+自动触发:if 自身有标签(包含标签="安全") and 自身有标签(包含标签="空对地") and not 自身有标签(包含标签="已定制") and 自身在攻击 and 自身属于AI控制 and 自身自定义计时器(指定时间后=1)
+重置自定义计时器:真
+需要条件:if 敌人有此单位数量(需标签="建造", 范围内=310, 超过=0) or 敌人有此单位数量(需标签="激光防御塔", 范围内=310, 超过=0) or 敌人有此单位数量(需标签="对空", 范围内=310, 超过=0)
+添加路径点路径可达:真
+清除所有路径点:真
+添加路径点动作类型:攻击
+添加路径点检索标签:建造
+添加路径点检索范围:310
+添加路径点靠近队伍:敌方
+添加路径点失败触发:攻击激光
+[隐藏行动_攻击激光]
+添加路径点路径可达:真
+添加路径点动作类型:攻击
+添加路径点检索标签:激光防御塔
+添加路径点检索范围:310
+添加路径点靠近队伍:敌方
+添加路径点失败触发:攻击对空
+[隐藏行动_攻击对空]
+添加路径点路径可达:真
+添加路径点动作类型:攻击
+添加路径点检索标签:对空
+添加路径点检索范围:310
+添加路径点靠近队伍:敌方
 
-[global_resource_空军编号]
-hidden:true
-[resource_编号]
-hidden:true
-[hiddenAction_编号设定]
-autoTriggerOnEvent:created
-setResourcesWithLogic:空军编号=self.resource.空军编号+1, 编号=self.resource.空军编号
+[全局资源_空军编号]
+隐藏:真
+[资源_编号]
+隐藏:真
+[隐藏行动_编号设定]
+自动触发事件:创建
+用逻辑设置资源:空军编号=自身资源.空军编号+1, 编号=自身资源.空军编号

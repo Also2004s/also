@@ -165,6 +165,8 @@ def get_mod_title(mod_info_path):
 def main():
     """主函数"""
     # 修改源目录为编译后的输出目录
+    #D:\Users\Documents\MuMu共享文件夹\X\rustedWarfare\units\人机的玩笑
+    #D:\ALSO2004\人机的玩笑
     source_dir = r"D:\Users\Documents\MuMu共享文件夹\X\rustedWarfare\units\人机的玩笑"
     output_dir = r"D:\Users\Documents\MuMu共享文件夹\X\rustedWarfare\units"
     

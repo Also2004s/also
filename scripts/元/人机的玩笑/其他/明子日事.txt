@@ -32,26 +32,3 @@
 需要条件:if A7 or A8
 
 我举例的里面有3个自动触发，5个自动触发条件（B1—B5），8个需要条件（A1—A8），1个添加路径点动作类型，1个清除所有路径点，3个设置单位内存，4个用逻辑设置资源，以我的标准尝试匹配出这个数量
-
-第一组 没有差异，跳过，不执行任何操作
-自动触发:if A and B and C
-需要条件:if D or E
-
-自动触发:真
-需要条件:if D and A and B and C or E and A and B and C
-
-第二组 存在差异，多了条件
-自动触发:if A and B
-需要条件:if D or E
-
-自动触发:真
-需要条件:if D and A and B or E and A and B and C
-输出差异：C
-
-第三组 存在差异，逻辑变形
-自动触发:if A and B
-需要条件:if D or E
-
-自动触发:真
-需要条件:if D and A and B and E and A and B
-输出正确的条件形式：D and A and B or E and A and B

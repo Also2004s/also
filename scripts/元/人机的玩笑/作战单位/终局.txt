@@ -119,5 +119,3 @@ addWaypoint_type:attack
 addWaypoint_target_nearestUnit_tagged:对地
 addWaypoint_target_nearestUnit_maxRange:310
 addWaypoint_target_nearestUnit_team:enemy
-
-

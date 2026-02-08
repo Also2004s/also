@@ -9,82 +9,100 @@ root_dir = '.'
 meta_dir = 'scripts/元/人机的玩笑'
 
 
-def parse_diff_report(diff_file_path):
-    """解析自动触发差异报告，提取每个节的差异信息"""
+def get_ini_files_with_differences():
+    """自动扫描并比较两个目录下的所有ini/template文件，返回有差异的节信息"""
     sections = {}
     
-    try:
-        with open(diff_file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
-    except Exception as e:
-        print(f'读取差异报告失败: {e}')
-        return sections
+    # 支持的文件后缀
+    valid_extensions = ('.ini', '.template')
     
-    # 找到"一眼看差异"部分
-    start_marker = '【一眼看差异'
-    end_marker = '【逻辑等价'
+    # 获取所有需要比较的文件
+    root_files = set()
+    meta_files = set()
     
-    start_pos = content.find(start_marker)
-    end_pos = content.find(end_marker)
+    for root, dirs, filenames in os.walk(root_dir):
+        # 跳过 .git 和元目录
+        dirs[:] = [d for d in dirs if d != '.git' and not d.endswith('元')]
+        for f in filenames:
+            if f.endswith(valid_extensions):
+                rel_path = os.path.relpath(os.path.join(root, f), root_dir)
+                # 排除输出文件和脚本
+                if not rel_path.startswith('scripts/') and not rel_path.startswith('scripts\\'):
+                    root_files.add(rel_path)
     
-    if start_pos == -1:
-        print('未找到差异部分标记')
-        return sections
+    for root, dirs, filenames in os.walk(meta_dir):
+        for f in filenames:
+            if f.endswith(valid_extensions):
+                rel_path = os.path.relpath(os.path.join(root, f), meta_dir)
+                meta_files.add(rel_path)
     
-    if end_pos == -1:
-        diff_content = content[start_pos:]
-    else:
-        diff_content = content[start_pos:end_pos]
+    # 比较共同文件
+    common_files = root_files & meta_files
     
-    # 解析差异项
-    item_pattern = r'【\d+】(.+?)\s*\[([^\]]+)\]'
-    matches = list(re.finditer(item_pattern, diff_content))
+    print(f'扫描到 {len(root_files)} 个文件在根目录')
+    print(f'扫描到 {len(meta_files)} 个文件在元目录')
+    print(f'共同文件: {len(common_files)} 个')
     
-    for i, match in enumerate(matches):
-        file_path = match.group(1).strip()
-        section_name = match.group(2).strip()
-        start = match.end()
+    for rel_path in common_files:
+        root_path = os.path.join(root_dir, rel_path)
+        meta_path = os.path.join(meta_dir, rel_path)
         
-        if i + 1 < len(matches):
-            end = matches[i + 1].start()
-        else:
-            end = len(diff_content)
+        try:
+            with open(root_path, 'r', encoding='utf-8', errors='ignore') as rf:
+                root_lines = rf.readlines()
+            with open(meta_path, 'r', encoding='utf-8', errors='ignore') as mf:
+                meta_lines = mf.readlines()
+        except Exception as e:
+            print(f'读取文件失败 {rel_path}: {e}')
+            continue
         
-        block = diff_content[start:end]
+        root_sections = extract_sections(root_lines)
+        meta_sections = extract_sections(meta_lines)
         
-        # 提取 missing 和 added
-        missing_start = block.find('原始有而转换后缺少:')
-        added_start = block.find('转换后新增:')
+        # 检查所有节，找出有差异的
+        all_section_names = set(root_sections.keys()) | set(meta_sections.keys())
         
-        missing = None
-        added = None
-        
-        if missing_start != -1:
-            if added_start != -1:
-                missing = block[missing_start + len('原始有而转换后缺少:'):added_start].strip()
-            else:
-                missing = block[missing_start + len('原始有而转换后缺少:'):].strip()
-        
-        if added_start != -1:
-            added = block[added_start + len('转换后新增:'):].strip()
-        
-        # 清理多行文本
-        if missing:
-            missing = ' '.join(missing.split())
-        if added:
-            added = ' '.join(added.split())
-        
-        # 只保存有实际差异的项
-        if (missing and missing != '无') or (added and added != '无'):
-            key = f'{file_path}\\{section_name}'
-            sections[key] = {
-                'file': file_path,
-                'section': section_name,
-                'missing': missing if missing and missing != '无' else None,
-                'added': added if added and added != '无' else None
-            }
+        for section_name in all_section_names:
+            # 只关注包含自动触发或需要条件的节
+            root_has_conditions = has_auto_trigger_or_requirement(
+                root_sections.get(section_name, [])
+            )
+            meta_has_conditions = has_auto_trigger_or_requirement(
+                meta_sections.get(section_name, [])
+            )
+            
+            if not root_has_conditions and not meta_has_conditions:
+                continue
+            
+            # 比较内容
+            root_content = ''.join(root_sections.get(section_name, []))
+            meta_content = ''.join(meta_sections.get(section_name, []))
+            
+            if root_content != meta_content:
+                key = f'{rel_path}\\{section_name}'
+                sections[key] = {
+                    'file': rel_path,
+                    'section': section_name,
+                    'missing': None,  # 自动扫描模式不提供详细的missing/added
+                    'added': None
+                }
     
+    print(f'通过自动扫描发现 {len(sections)} 个有差异的节')
     return sections
+
+
+def has_auto_trigger_or_requirement(section_lines):
+    """检查节是否包含自动触发或需要条件"""
+    if not section_lines:
+        return False
+    
+    for line in section_lines:
+        stripped = line.strip()
+        if re.match(r'自动触发\s*:', stripped, re.IGNORECASE):
+            return True
+        if re.match(r'需要条件\s*:', stripped, re.IGNORECASE):
+            return True
+    return False
 
 
 def extract_sections(lines):
@@ -310,12 +328,13 @@ def analyze_conversion_difference(meta_auto, meta_required, root_required):
 
 
 def main():
-    # 首先解析差异报告
-    diff_report_path = 'scripts/数据集/自动触发差异报告.txt'
-    print(f'正在解析差异报告: {diff_report_path}')
+    # 直接扫描项目文件和元目录的差异
+    print('正在扫描项目文件和元目录的差异...')
+    print(f'根目录: {root_dir}')
+    print(f'元目录: {meta_dir}')
     
-    diff_sections = parse_diff_report(diff_report_path)
-    print(f'从差异报告中解析出 {len(diff_sections)} 个有差异的节')
+    diff_sections = get_ini_files_with_differences()
+    print(f'发现 {len(diff_sections)} 个有差异的节')
     
     # 分类结果
     # 第一组：自动触发为真，条件正确（假差异）

@@ -149,6 +149,76 @@ def get_all_files(base_path):
     return set(files)
 
 
+def extract_sub_conditions(condition_str):
+    """从条件字符串中提取子条件（按and分割，但保留括号内的内容）"""
+    if not condition_str:
+        return []
+    # 简单的and分割，假设条件格式相对规范
+    pattern = r'\s+and\s+'
+    parts = re.split(pattern, condition_str, flags=re.IGNORECASE)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def find_condition_differences(meta_required, root_required):
+    """
+    对比原始和当前的需要条件，找出差异
+    返回: (removed_list, added_list)
+    """
+    if not meta_required and not root_required:
+        return [], []
+    
+    if not meta_required:
+        return [], extract_sub_conditions(root_required)
+    
+    if not root_required:
+        return extract_sub_conditions(meta_required), []
+    
+    meta_conds = set(extract_sub_conditions(meta_required))
+    root_conds = set(extract_sub_conditions(root_required))
+    
+    removed = meta_conds - root_conds  # 原始有但当前没有的
+    added = root_conds - meta_conds    # 当前有但原始没有的
+    
+    return sorted(list(removed)), sorted(list(added))
+
+
+def is_simple_wrapped_parentheses(s):
+    """
+    检查字符串是否是简单的一对括号包裹的表达式。
+    例如："(A and B)" 是简单包裹，但 "(A) < (B)" 不是（因为内部还有独立括号组）
+    """
+    if not s.startswith('(') or not s.endswith(')'):
+        return False
+    
+    # 检查去掉外层括号后，内部括号是否平衡
+    # 如果平衡，说明是简单包裹；如果不平衡，说明外层括号是必要的
+    inner = s[1:-1]
+    depth = 0
+    for char in inner:
+        if char == '(':
+            depth += 1
+        elif char == ')':
+            depth -= 1
+            if depth < 0:
+                # 内部出现未匹配的右括号，说明外层括号是必要的
+                return False
+    
+    # 如果遍历完后 depth == 0，说明内部括号是平衡的
+    # 但还需要确保整个表达式确实被这一对括号包裹
+    # 重新检查：从左开始计数，只有到最后一个字符时深度才降为0
+    depth = 0
+    for i, char in enumerate(s):
+        if char == '(':
+            depth += 1
+        elif char == ')':
+            depth -= 1
+            if depth == 0 and i < len(s) - 1:
+                # 在结束前深度就降为0了，说明不是外层包裹
+                return False
+    
+    return depth == 0
+
+
 def analyze_conversion_difference(meta_auto, meta_required, root_required):
     """
     分析转换差异的类型
@@ -168,6 +238,11 @@ def analyze_conversion_difference(meta_auto, meta_required, root_required):
         'issue': None
     }
     
+    # 对于自动触发为真的情况，比较原始需要条件和当前需要条件
+    removed, added = find_condition_differences(meta_required, root_required)
+    
+    # 先检查是否是逻辑变形（or/and 优先级问题）
+    # 这种情况的特征是：原始自动触发有or，且当前条件只是简单附加了需要条件
     # 构建原始完整逻辑：自动触发条件 AND 需要条件
     original_full = None
     if meta_auto and meta_required:
@@ -188,30 +263,7 @@ def analyze_conversion_difference(meta_auto, meta_required, root_required):
     if orig_norm == root_norm:
         return result
     
-    # 检查是否是简单子串包含关系
-    # 情况1：原始条件被整体包含在当前条件中（添加了额外条件）
-    if orig_norm in root_norm:
-        # 找出添加的部分
-        added_part = root_required.replace(original_full, '').strip()
-        if added_part.startswith('and '):
-            added_part = added_part[4:].strip()
-        result['type'] = 'simple'
-        result['added'] = [added_part] if added_part else []
-        return result
-    
-    # 情况2：当前条件被整体包含在原始条件中（移除了部分条件）
-    if root_norm in orig_norm:
-        removed_part = original_full.replace(root_required, '').strip()
-        if removed_part.startswith('and '):
-            removed_part = removed_part[4:].strip()
-        result['type'] = 'simple'
-        result['removed'] = [removed_part] if removed_part else []
-        return result
-    
-    # 情况3：检查是否是逻辑变形（or/and 优先级问题）
-    # 这种情况通常表现为：原始条件包含 or，但当前条件错误地将 and 条件附加到最后
-    
-    # 检查原始自动触发是否包含 or
+    # 检查是否是逻辑变形（or/and 优先级问题）
     has_or_in_auto = bool(meta_auto and re.search(r'\s+or\s+', meta_auto, re.IGNORECASE))
     
     if has_or_in_auto and meta_required:
@@ -239,15 +291,21 @@ def analyze_conversion_difference(meta_auto, meta_required, root_required):
             correct_parts = []
             for cond in auto_conds:
                 cond = cond.strip()
-                if cond.startswith('(') and cond.endswith(')'):
+                # 使用改进的判断：只有简单括号包裹才去掉括号
+                if is_simple_wrapped_parentheses(cond):
                     cond = cond[1:-1]
-                correct_parts.append(f"({cond} and {meta_required})")
+                correct_parts.append(f"{cond} and {meta_required}")
             result['correct_form'] = ' or '.join(correct_parts)
             
             return result
     
-    # 默认情况：简单差异分析
-    result['type'] = 'complex'
+    # 不是逻辑变形，返回简单差异
+    if removed or added:
+        result['removed'] = removed
+        result['added'] = added
+        return result
+    
+    # 默认情况
     return result
 
 
@@ -339,8 +397,14 @@ def main():
         }
         
         # 如果当前自动触发不为真，分到第四组
+        # 但如果原始和当前都没有有效的自动触发条件（都是"假"或都没有if），则是假差异
         if not root_is_true:
-            auto_not_true_with_diff.append(item)
+            # 检查原始是否也没有有效条件
+            if not meta_auto and not meta_is_true:
+                # 两者都没有有效条件，是假差异
+                auto_true_correct.append(item)
+            else:
+                auto_not_true_with_diff.append(item)
             continue
         
         # 当前自动触发为真，分析差异类型
@@ -371,19 +435,10 @@ def main():
         out.write(f'对比目录: 项目根目录 vs scripts/元/人机的玩笑\n')
         out.write(f'差异报告中的总差异节数: {len(diff_sections)}\n')
         out.write(f'=' * 80 + '\n\n')
+    
         
-        # 第一组：条件正确（假差异）
-        if auto_true_correct:
-            out.write(f'=== 第一组：条件正确（共{len(auto_true_correct)}个）===\n')
-            out.write(f'说明：差异报告误判，实际条件已正确转换\n')
-            out.write(f'结论：这些节**无需修改**\n\n')
-            
-            for i, item in enumerate(auto_true_correct, 1):
-                out.write(f'【{i}】{item["file"]} [{item["section"]}]\n')
-                out.write(f'  ✓ 条件已正确转换\n\n')
-        
-        # 第二组：简单条件差异
-        out.write(f'=== 第二组：自动触发为真，简单条件差异（共{len(auto_true_simple_diff)}个）===\n')
+        # 简单条件差异
+        out.write(f'=== 第一组：自动触发为真，简单条件差异（共{len(auto_true_simple_diff)}个）===\n')
         out.write(f'说明：这些节已设置"自动触发:真"，但"需要条件"有简单添加或移除\n')
         out.write(f'操作：根据添加/移除的条件修正\n\n')
         
@@ -423,8 +478,8 @@ def main():
         else:
             out.write('（无）\n\n')
         
-        # 第三组：逻辑变形
-        out.write(f'=== 第三组：自动触发为真，逻辑变形（共{len(auto_true_logic_deformed)}个）===\n')
+        # 第二组：逻辑变形
+        out.write(f'=== 第二组：自动触发为真，逻辑变形（共{len(auto_true_logic_deformed)}个）===\n')
         out.write(f'说明：这些节已设置"自动触发:真"，但or/and优先级错误，导致逻辑不等价\n')
         out.write(f'操作：需要按正确形式重写"需要条件"\n\n')
         
@@ -456,8 +511,8 @@ def main():
         else:
             out.write('（无）\n\n')
         
-        # 第四组：自动触发不为真
-        out.write(f'=== 第四组：未转换（共{len(auto_not_true_with_diff)}个）===\n')
+        # 第三组：自动触发不为真
+        out.write(f'=== 第三组：未转换（共{len(auto_not_true_with_diff)}个）===\n')
         out.write(f'说明：这些节仍使用if条件形式，未转换为"自动触发:真"\n')
         out.write(f'操作：需要转换\n\n')
         
@@ -466,30 +521,22 @@ def main():
                 out.write(f'【{i}】{item["file"]} [{item["section"]}]\n')
                 
                 if item['meta_is_true']:
-                    out.write(f'  原始自动触发: 真\n')
+                    out.write(f'  自动触发: 真\n')
                 elif item['meta_auto']:
-                    out.write(f'  原始自动触发: if {item["meta_auto"]}\n')
+                    out.write(f'  自动触发: if {item["meta_auto"]}\n')
                 else:
-                    out.write(f'  原始自动触发: （无）\n')
+                    out.write(f'  自动触发: （无）\n')
                 
                 if item['meta_required']:
-                    out.write(f'  原始需要条件: if {item["meta_required"]}\n')
+                    out.write(f'  需要条件: if {item["meta_required"]}\n\n')
                 
-                if item['root_is_true']:
-                    out.write(f'  当前自动触发: 真\n')
-                elif item['root_auto']:
-                    out.write(f'  当前自动触发: if {item["root_auto"]}\n')
-                else:
-                    out.write(f'  当前自动触发: （无）\n')
-                
-                if item['root_required']:
-                    out.write(f'  当前需要条件: if {item["root_required"]}\n')
+              
                 
                 # 给出建议
                 if item['meta_auto'] and item['meta_required']:
                     # 检查自动触发是否包含or
                     if re.search(r'\s+or\s+', item['meta_auto'], re.IGNORECASE):
-                        # 需要展开为：(A and C) or (B and C)
+                        # 需要展开为：A and C or B and C
                         auto_conds = re.split(r'\s+or\s+', item['meta_auto'], flags=re.IGNORECASE)
                         correct_parts = []
                         for cond in auto_conds:
@@ -498,7 +545,7 @@ def main():
                         combined = ' or '.join(correct_parts)
                         out.write(f'  💡 建议: 自动触发:真, 需要条件:if {combined}\n')
                     else:
-                        combined = f"({item['meta_auto']}) and ({item['meta_required']})"
+                        combined = f"{item['meta_auto']} and {item['meta_required']}"
                         out.write(f'  💡 建议: 自动触发:真, 需要条件:if {combined}\n')
                 elif item['meta_auto']:
                     out.write(f'  💡 建议: 自动触发:真, 需要条件:if {item["meta_auto"]}\n')
